@@ -1,0 +1,1037 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Mission Retour</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --fond: #07101d;
+      --panneau: rgba(9, 21, 36, 0.94);
+      --panneau-clair: #132b43;
+      --texte: #f4f8fb;
+      --texte-doux: #b9cad8;
+      --cyan: #66e5ff;
+      --cyan-fonce: #143b50;
+      --orange: #ff9d2e;
+      --orange-clair: #ffd08a;
+      --vert-ecran: #b8ffca;
+      --bordure: rgba(166, 211, 234, 0.28);
+      --ombre: 0 18px 50px rgba(0, 0, 0, 0.42);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--fond);
+      color: var(--texte);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 18px;
+    }
+
+    button, input { font: inherit; }
+
+    button { touch-action: manipulation; }
+
+    .masque { display: none !important; }
+
+    /* L'accueil reste au-dessus de la scène tant que les données ne sont pas prêtes. */
+    #accueil {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      overflow-y: auto;
+      background:
+        radial-gradient(circle at 20% 15%, rgba(28, 112, 151, 0.28), transparent 34%),
+        radial-gradient(circle at 80% 85%, rgba(175, 77, 29, 0.18), transparent 34%),
+        linear-gradient(145deg, #050b14, #0a1828 55%, #07101d);
+    }
+
+    .carte-accueil {
+      width: min(760px, 100%);
+      padding: clamp(26px, 5vw, 52px);
+      border: 1px solid var(--bordure);
+      border-radius: 26px;
+      background: var(--panneau);
+      box-shadow: var(--ombre);
+    }
+
+    .surtitre {
+      margin: 0 0 8px;
+      color: var(--cyan);
+      font-size: 0.85rem;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.5rem, 9vw, 5.7rem);
+      line-height: 0.95;
+      letter-spacing: -0.055em;
+    }
+
+    .introduction {
+      max-width: 560px;
+      margin: 22px 0 30px;
+      color: var(--texte-doux);
+      font-size: 1.05rem;
+      line-height: 1.6;
+    }
+
+    fieldset {
+      min-width: 0;
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+
+    legend {
+      margin-bottom: 14px;
+      font-size: 1.1rem;
+      font-weight: 800;
+    }
+
+    #choix-pannes {
+      display: grid;
+      gap: 10px;
+    }
+
+    .choix-panne {
+      position: relative;
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 12px;
+      align-items: center;
+      min-height: 66px;
+      padding: 12px 16px;
+      border: 2px solid transparent;
+      border-radius: 14px;
+      background: #102237;
+      cursor: pointer;
+      transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+    }
+
+    .choix-panne:hover { transform: translateY(-1px); }
+
+    .choix-panne:has(input:checked) {
+      border-color: var(--cyan);
+      background: #123149;
+    }
+
+    .choix-panne:has(input:focus-visible) {
+      outline: 3px solid white;
+      outline-offset: 3px;
+    }
+
+    .choix-panne input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .numero-panne {
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--cyan-fonce);
+      color: var(--cyan);
+      font-weight: 900;
+    }
+
+    .nom-panne { line-height: 1.35; }
+
+    #commencer {
+      width: 100%;
+      min-height: 58px;
+      margin-top: 22px;
+      border: 0;
+      border-radius: 14px;
+      background: var(--orange);
+      color: #171007;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 8px 22px rgba(255, 157, 46, 0.22);
+    }
+
+    #commencer:hover:not(:disabled) { background: #ffb453; }
+    #commencer:focus-visible { outline: 3px solid white; outline-offset: 3px; }
+    #commencer:disabled { opacity: 0.55; cursor: wait; }
+
+    #statut-chargement {
+      min-height: 1.5em;
+      margin: 14px 0 0;
+      color: var(--texte-doux);
+      text-align: center;
+    }
+
+    #statut-chargement.erreur { color: #ffb6aa; }
+
+    /* La scène occupe tout l'espace disponible, y compris dans une iframe. */
+    #simulation {
+      position: fixed;
+      inset: 0;
+      background: #050b12;
+    }
+
+    #scene-3d, #scene-3d canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    #scene-3d canvas {
+      cursor: grab;
+      touch-action: none;
+    }
+
+    #scene-3d canvas:active { cursor: grabbing; }
+
+    .barre-haute {
+      position: absolute;
+      z-index: 4;
+      top: max(16px, env(safe-area-inset-top));
+      left: max(16px, env(safe-area-inset-left));
+      right: max(16px, env(safe-area-inset-right));
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: flex-start;
+      pointer-events: none;
+    }
+
+    .identite-mission, .etat-voyant {
+      padding: 10px 14px;
+      border: 1px solid var(--bordure);
+      border-radius: 12px;
+      background: rgba(5, 14, 25, 0.82);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+    }
+
+    .identite-mission strong {
+      display: block;
+      font-size: 1.05rem;
+    }
+
+    #panne-active {
+      display: block;
+      max-width: min(58vw, 520px);
+      margin-top: 2px;
+      color: var(--texte-doux);
+      font-size: 0.82rem;
+      line-height: 1.3;
+    }
+
+    .etat-voyant {
+      display: flex;
+      gap: 9px;
+      align-items: center;
+      white-space: nowrap;
+      font-size: 0.85rem;
+      font-weight: 800;
+    }
+
+    .pastille-voyant {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--orange);
+      box-shadow: 0 0 16px var(--orange);
+      animation: clignoter 1s ease-in-out infinite;
+    }
+
+    @keyframes clignoter { 50% { opacity: 0.22; box-shadow: 0 0 3px var(--orange); } }
+
+    .consigne-scene {
+      position: absolute;
+      z-index: 3;
+      top: 104px;
+      left: 50%;
+      width: max-content;
+      max-width: calc(100% - 32px);
+      transform: translateX(-50%);
+      margin: 0;
+      padding: 8px 14px;
+      border-radius: 99px;
+      background: rgba(5, 14, 25, 0.78);
+      color: var(--texte-doux);
+      text-align: center;
+      font-size: 0.88rem;
+      pointer-events: none;
+    }
+
+    /* Ces étiquettes suivent les trois points de test dans la scène. */
+    #etiquettes-points {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .etiquette-point {
+      position: absolute;
+      transform: translate(-50%, -155%);
+      padding: 5px 10px;
+      border: 2px solid rgba(102, 229, 255, 0.72);
+      border-radius: 8px;
+      background: rgba(3, 12, 20, 0.88);
+      color: white;
+      font-weight: 900;
+      line-height: 1;
+      white-space: nowrap;
+      filter: drop-shadow(0 5px 7px rgba(0, 0, 0, 0.55));
+    }
+
+    .etiquette-point::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      width: 2px;
+      height: 12px;
+      background: rgba(102, 229, 255, 0.72);
+    }
+
+    .etiquette-point.active {
+      border-color: var(--orange-clair);
+      color: var(--orange-clair);
+    }
+
+    /* L'écran du multimètre reste en HTML pour conserver une lecture nette. */
+    .multimetre-ui {
+      position: absolute;
+      z-index: 5;
+      left: max(16px, env(safe-area-inset-left));
+      bottom: max(16px, env(safe-area-inset-bottom));
+      width: min(420px, calc(100% - 32px));
+      padding: 15px;
+      border: 2px solid #526172;
+      border-radius: 20px;
+      background: rgba(22, 29, 36, 0.96);
+      box-shadow: var(--ombre);
+    }
+
+    .multimetre-titre {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+      color: #e8edf2;
+      font-size: 0.82rem;
+      font-weight: 900;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    #point-mesure { color: var(--orange-clair); }
+
+    .ecran-multimetre {
+      display: flex;
+      min-height: 82px;
+      justify-content: flex-end;
+      align-items: baseline;
+      gap: 10px;
+      padding: 8px 16px;
+      border: 5px solid #0d1114;
+      border-radius: 9px;
+      background: #b8d5b9;
+      color: #102216;
+      font-family: "Courier New", ui-monospace, monospace;
+      box-shadow: inset 0 0 16px rgba(16, 34, 22, 0.2);
+      font-variant-numeric: tabular-nums;
+    }
+
+    #valeur-mesure {
+      font-size: clamp(2.6rem, 9vw, 4rem);
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: 0.02em;
+    }
+
+    #unite-mesure {
+      min-width: 1.2em;
+      font-size: 1.5rem;
+      font-weight: 900;
+    }
+
+    #selecteur-multimetre {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
+      margin-top: 11px;
+    }
+
+    .bouton-mode {
+      min-height: 52px;
+      padding: 7px 8px;
+      border: 2px solid #526172;
+      border-radius: 10px;
+      background: #29333c;
+      color: white;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .bouton-mode[aria-pressed="true"] {
+      border-color: var(--orange);
+      background: #5a3617;
+      color: #fff4e3;
+    }
+
+    .bouton-mode:focus-visible { outline: 3px solid var(--cyan); outline-offset: 2px; }
+
+    #statut-mesure {
+      min-height: 1.35em;
+      margin: 9px 2px 0;
+      color: var(--texte-doux);
+      font-size: 0.84rem;
+      line-height: 1.35;
+    }
+
+    .bulle-ines {
+      position: absolute;
+      z-index: 4;
+      right: max(16px, env(safe-area-inset-right));
+      bottom: max(16px, env(safe-area-inset-bottom));
+      display: grid;
+      grid-template-columns: 54px 1fr;
+      gap: 12px;
+      width: min(430px, calc(100% - 32px));
+      padding: 15px;
+      border: 1px solid var(--bordure);
+      border-radius: 18px;
+      background: rgba(9, 24, 39, 0.95);
+      box-shadow: var(--ombre);
+    }
+
+    .portrait-ines {
+      display: grid;
+      place-items: center;
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #de765c, #713c4a);
+      color: white;
+      font-size: 1.3rem;
+      font-weight: 900;
+    }
+
+    .bulle-ines strong { display: block; margin-bottom: 3px; color: var(--cyan); }
+    #message-ines { margin: 0; color: #e4edf3; line-height: 1.45; }
+
+    @media (max-width: 780px) {
+      .barre-haute { align-items: stretch; }
+      .etat-voyant { padding: 10px; }
+      .etat-voyant span:last-child { display: none; }
+      .consigne-scene { top: 116px; }
+      .multimetre-ui { bottom: max(184px, calc(env(safe-area-inset-bottom) + 184px)); }
+      .bulle-ines { grid-template-columns: 44px 1fr; }
+      .portrait-ines { width: 44px; height: 44px; }
+    }
+
+    @media (max-height: 680px) and (min-width: 781px) {
+      .multimetre-ui { width: 370px; }
+      .bulle-ines { width: 390px; }
+      .ecran-multimetre { min-height: 64px; }
+      #valeur-mesure { font-size: 2.7rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+      .pastille-voyant { animation-duration: 2s; }
+    }
+  </style>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <main>
+    <section id="accueil" aria-labelledby="titre-principal">
+      <div class="carte-accueil">
+        <p class="surtitre">Simulation de diagnostic</p>
+        <h1 id="titre-principal">Mission Retour</h1>
+        <p class="introduction">Le circuit de propulsion est en panne. Choisis le scénario à examiner, puis relève les tensions sur le boîtier.</p>
+
+        <fieldset>
+          <legend>Choisir la panne</legend>
+          <div id="choix-pannes" aria-live="polite"></div>
+        </fieldset>
+
+        <button id="commencer" type="button" disabled>Chargement…</button>
+        <p id="statut-chargement" role="status">Lecture des données de mission…</p>
+      </div>
+    </section>
+
+    <section id="simulation" class="masque" aria-label="Scène de diagnostic électrique">
+      <div id="scene-3d"></div>
+      <div id="etiquettes-points" aria-hidden="true"></div>
+
+      <header class="barre-haute">
+        <div class="identite-mission">
+          <strong>Mission Retour</strong>
+          <span id="panne-active"></span>
+        </div>
+        <div class="etat-voyant" aria-label="Voyant propulsion orange clignotant">
+          <span class="pastille-voyant"></span>
+          <span>PROPULSION</span>
+        </div>
+      </header>
+
+      <p class="consigne-scene">Fais pivoter la vue, règle le multimètre, puis touche un point de test.</p>
+
+      <aside class="multimetre-ui" aria-label="Multimètre">
+        <div class="multimetre-titre">
+          <span>Multimètre</span>
+          <span id="point-mesure">Aucun point</span>
+        </div>
+        <div class="ecran-multimetre" aria-live="polite" aria-atomic="true">
+          <span id="valeur-mesure">— — —</span>
+          <span id="unite-mesure"></span>
+        </div>
+        <div id="selecteur-multimetre" role="group" aria-label="Sélecteur du multimètre">
+          <button class="bouton-mode" type="button" data-mode="arret" aria-pressed="true">Arrêt</button>
+          <button class="bouton-mode" type="button" data-mode="volts" aria-pressed="false">V continue</button>
+          <button class="bouton-mode" type="button" data-mode="ohms" aria-pressed="false">Ω ohmmètre</button>
+        </div>
+        <p id="statut-mesure" role="status">Sélectionne « V continue » pour mesurer une tension.</p>
+      </aside>
+
+      <aside class="bulle-ines" aria-label="Message d'Inès Carvalho">
+        <div class="portrait-ines" aria-hidden="true">IC</div>
+        <div>
+          <strong>Inès Carvalho</strong>
+          <p id="message-ines"></p>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script type="module">
+    import * as THREE from "three";
+    import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+    // Ce chemin est adapté dans la copie versions/v1.html.
+    const CHEMIN_DONNEES = "./data.json";
+
+    const ui = {
+      accueil: document.querySelector("#accueil"),
+      simulation: document.querySelector("#simulation"),
+      choixPannes: document.querySelector("#choix-pannes"),
+      commencer: document.querySelector("#commencer"),
+      statutChargement: document.querySelector("#statut-chargement"),
+      panneActive: document.querySelector("#panne-active"),
+      messageInes: document.querySelector("#message-ines"),
+      valeur: document.querySelector("#valeur-mesure"),
+      unite: document.querySelector("#unite-mesure"),
+      pointMesure: document.querySelector("#point-mesure"),
+      statutMesure: document.querySelector("#statut-mesure"),
+      boutonsMode: [...document.querySelectorAll(".bouton-mode")],
+      scene: document.querySelector("#scene-3d"),
+      etiquettes: document.querySelector("#etiquettes-points")
+    };
+
+    let donnees;
+    let panneChoisie;
+    let modeMultimetre = "arret";
+    let minuterieMesure = null;
+    let pointActif = null;
+
+    let scene;
+    let camera;
+    let rendu;
+    let controles;
+    let rayon;
+    let voyant3D;
+    let lumiereVoyant;
+    let pointsCliquables = [];
+    let pointeurInitial = null;
+    let facteurCamera = 1;
+
+    initialiserDonnees();
+
+    // Toutes les pannes affichées viennent du fichier afin qu'un formateur puisse les modifier.
+    async function initialiserDonnees() {
+      try {
+        const reponse = await fetch(CHEMIN_DONNEES);
+        if (!reponse.ok) throw new Error(`Réponse HTTP ${reponse.status}`);
+        donnees = await reponse.json();
+        afficherChoixPannes();
+        ui.commencer.disabled = false;
+        ui.commencer.textContent = "Commencer";
+        ui.statutChargement.textContent = "Données prêtes.";
+      } catch (erreur) {
+        console.error("Impossible de lire les données de mission.", erreur);
+        ui.commencer.textContent = "Données indisponibles";
+        ui.statutChargement.textContent = "Impossible de lire data.json. Lance la page depuis un serveur HTTP local.";
+        ui.statutChargement.classList.add("erreur");
+      }
+    }
+
+    function afficherChoixPannes() {
+      ui.choixPannes.replaceChildren();
+
+      donnees.pannes.forEach((panne, index) => {
+        const etiquette = document.createElement("label");
+        etiquette.className = "choix-panne";
+
+        const radio = document.createElement("input");
+        radio.type = "radio";
+        radio.name = "panne";
+        radio.value = String(panne.id);
+        radio.checked = index === 0;
+
+        const numero = document.createElement("span");
+        numero.className = "numero-panne";
+        numero.textContent = panne.id;
+
+        const nom = document.createElement("span");
+        nom.className = "nom-panne";
+        nom.textContent = panne.nom;
+
+        etiquette.append(radio, numero, nom);
+        ui.choixPannes.append(etiquette);
+      });
+    }
+
+    ui.commencer.addEventListener("click", () => {
+      const choix = document.querySelector('input[name="panne"]:checked');
+      panneChoisie = donnees.pannes.find((panne) => String(panne.id) === choix?.value);
+      if (!panneChoisie) return;
+
+      ui.panneActive.textContent = `Scénario ${panneChoisie.id} · ${panneChoisie.nom}`;
+      ui.messageInes.textContent = donnees.messages_ines.accueil;
+      ui.accueil.classList.add("masque");
+      ui.simulation.classList.remove("masque");
+      creerScene3D();
+    }, { once: true });
+
+    // Le sélecteur pilote seulement l'affichage : les erreurs électriques viendront plus tard.
+    ui.boutonsMode.forEach((bouton) => {
+      bouton.addEventListener("click", () => changerMode(bouton.dataset.mode));
+    });
+
+    function changerMode(nouveauMode) {
+      modeMultimetre = nouveauMode;
+      arreterMesureInstable();
+
+      ui.boutonsMode.forEach((bouton) => {
+        bouton.setAttribute("aria-pressed", String(bouton.dataset.mode === nouveauMode));
+      });
+
+      if (nouveauMode === "arret") {
+        ui.valeur.textContent = "— — —";
+        ui.unite.textContent = "";
+        ui.statutMesure.textContent = "Multimètre arrêté.";
+      } else if (nouveauMode === "volts") {
+        ui.valeur.textContent = "— — —";
+        ui.unite.textContent = "V";
+        ui.statutMesure.textContent = "Touche TP1, TP2 ou TP3 pour mesurer.";
+      } else {
+        ui.valeur.textContent = "— — —";
+        ui.unite.textContent = "Ω";
+        ui.statutMesure.textContent = "La mesure de résistance sera ajoutée dans une prochaine étape.";
+      }
+
+      if (pointActif) marquerPointActif(null);
+    }
+
+    function mesurerPoint(idPoint) {
+      arreterMesureInstable();
+      marquerPointActif(idPoint);
+      ui.pointMesure.textContent = idPoint;
+
+      if (modeMultimetre !== "volts") {
+        ui.statutMesure.textContent = modeMultimetre === "arret"
+          ? "Le multimètre est arrêté. Choisis « V continue »."
+          : "Choisis « V continue » pour mesurer une tension.";
+        return;
+      }
+
+      const mesure = panneChoisie.mesures[idPoint];
+      if (!mesure) {
+        ui.statutMesure.textContent = "Aucune valeur disponible pour ce point.";
+        return;
+      }
+
+      const actualiser = () => {
+        const valeur = mesure.instable
+          ? mesure.min + Math.random() * (mesure.max - mesure.min)
+          : (mesure.min + mesure.max) / 2;
+        ui.valeur.textContent = valeur.toFixed(1);
+      };
+
+      actualiser();
+      ui.unite.textContent = "V";
+      ui.statutMesure.textContent = mesure.instable
+        ? `${idPoint} · valeur instable`
+        : `${idPoint} · mesure stable`;
+
+      if (mesure.instable) {
+        minuterieMesure = window.setInterval(actualiser, donnees.intervalle_instable_ms);
+      }
+    }
+
+    function arreterMesureInstable() {
+      if (minuterieMesure !== null) {
+        window.clearInterval(minuterieMesure);
+        minuterieMesure = null;
+      }
+    }
+
+    function marquerPointActif(idPoint) {
+      pointActif = idPoint;
+      pointsCliquables.forEach((point) => {
+        const actif = point.userData.id === idPoint;
+        point.material.emissiveIntensity = actif ? 1.5 : 0.55;
+        point.scale.setScalar(actif ? 1.22 : 1);
+        point.userData.etiquette?.classList.toggle("active", actif);
+      });
+    }
+
+    function creerScene3D() {
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x050b12);
+      scene.fog = new THREE.Fog(0x050b12, 11, 25);
+
+      const ratioScene = ui.scene.clientWidth / ui.scene.clientHeight;
+      facteurCamera = calculerFacteurCamera(ui.scene.clientWidth, ui.scene.clientHeight);
+      camera = new THREE.PerspectiveCamera(42, ratioScene, 0.1, 100);
+      camera.position.set(0, 3.9 * facteurCamera, 9.6 * facteurCamera);
+
+      rendu = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+      rendu.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      rendu.setSize(ui.scene.clientWidth, ui.scene.clientHeight);
+      rendu.outputColorSpace = THREE.SRGBColorSpace;
+      rendu.shadowMap.enabled = true;
+      rendu.shadowMap.type = THREE.PCFSoftShadowMap;
+      rendu.domElement.setAttribute("aria-label", "Boîtier électrique 3D avec trois points de test");
+      ui.scene.append(rendu.domElement);
+
+      controles = new OrbitControls(camera, rendu.domElement);
+      controles.target.set(0, calculerCibleCamera(facteurCamera), 0);
+      controles.enableDamping = true;
+      controles.enablePan = false;
+      controles.minDistance = 6.2 * facteurCamera;
+      controles.maxDistance = 12.5 * facteurCamera;
+      controles.minPolarAngle = Math.PI * 0.22;
+      controles.maxPolarAngle = Math.PI * 0.58;
+      controles.minAzimuthAngle = -Math.PI * 0.42;
+      controles.maxAzimuthAngle = Math.PI * 0.42;
+
+      rayon = new THREE.Raycaster();
+      ajouterLumieres();
+      ajouterDecor();
+      ajouterBoitier();
+      ajouterMultimetre3D();
+      brancherSelection();
+
+      window.addEventListener("resize", redimensionnerScene);
+      animer();
+    }
+
+    function ajouterLumieres() {
+      scene.add(new THREE.HemisphereLight(0x9edcff, 0x2a120b, 2.35));
+
+      const principale = new THREE.DirectionalLight(0xffffff, 3.1);
+      principale.position.set(-4, 7, 6);
+      principale.castShadow = true;
+      principale.shadow.mapSize.set(1024, 1024);
+      scene.add(principale);
+
+      const contre = new THREE.DirectionalLight(0x3e9bcc, 1.6);
+      contre.position.set(5, 1, -4);
+      scene.add(contre);
+    }
+
+    function ajouterDecor() {
+      const sol = new THREE.Mesh(
+        new THREE.PlaneGeometry(40, 40),
+        new THREE.MeshStandardMaterial({ color: 0x131a20, roughness: 0.94, metalness: 0.12 })
+      );
+      sol.rotation.x = -Math.PI / 2;
+      sol.position.y = -2.55;
+      sol.receiveShadow = true;
+      scene.add(sol);
+
+      const grille = new THREE.GridHelper(30, 30, 0x24475c, 0x172936);
+      grille.position.y = -2.53;
+      grille.material.opacity = 0.28;
+      grille.material.transparent = true;
+      scene.add(grille);
+    }
+
+    function ajouterBoitier() {
+      const groupe = new THREE.Group();
+      groupe.position.y = 0.25;
+      scene.add(groupe);
+
+      const coque = new THREE.Mesh(
+        new THREE.BoxGeometry(6.7, 4.1, 0.85),
+        new THREE.MeshStandardMaterial({ color: 0x283c4b, roughness: 0.58, metalness: 0.48 })
+      );
+      coque.castShadow = true;
+      coque.receiveShadow = true;
+      groupe.add(coque);
+
+      const facade = new THREE.Mesh(
+        new THREE.BoxGeometry(6.18, 3.55, 0.16),
+        new THREE.MeshStandardMaterial({ color: 0x172530, roughness: 0.72, metalness: 0.32 })
+      );
+      facade.position.z = 0.5;
+      groupe.add(facade);
+
+      // Les trois bornes sont les seuls objets interactifs de cette étape.
+      const positions = [-2.1, 0, 2.1];
+      donnees.points_de_test.forEach((point, index) => {
+        const borne = new THREE.Mesh(
+          new THREE.SphereGeometry(0.27, 28, 20),
+          new THREE.MeshStandardMaterial({
+            color: 0x68e9ff,
+            emissive: 0x1685a4,
+            emissiveIntensity: 0.55,
+            roughness: 0.25,
+            metalness: 0.72
+          })
+        );
+        borne.position.set(positions[index], 1.05, 0.72);
+        borne.castShadow = true;
+        borne.userData.id = point.id;
+        borne.userData.nom = point.nom;
+
+        const anneau = new THREE.Mesh(
+          new THREE.TorusGeometry(0.43, 0.055, 12, 40),
+          new THREE.MeshStandardMaterial({ color: 0x557181, emissive: 0x1c3e52, emissiveIntensity: 0.5 })
+        );
+        anneau.position.copy(borne.position);
+        groupe.add(anneau, borne);
+
+        const etiquette = document.createElement("span");
+        etiquette.className = "etiquette-point";
+        etiquette.textContent = point.id;
+        ui.etiquettes.append(etiquette);
+        borne.userData.etiquette = etiquette;
+        pointsCliquables.push(borne);
+      });
+
+      // Le disjoncteur est visible mais volontairement inactif dans la tâche 1.
+      const disjoncteur = new THREE.Group();
+      disjoncteur.position.set(-1.85, -0.55, 0.7);
+      const support = new THREE.Mesh(
+        new THREE.BoxGeometry(1.5, 1.05, 0.24),
+        new THREE.MeshStandardMaterial({ color: 0x354854, roughness: 0.65 })
+      );
+      const levier = new THREE.Mesh(
+        new THREE.BoxGeometry(0.38, 0.72, 0.3),
+        new THREE.MeshStandardMaterial({ color: 0xe4e9e9, roughness: 0.46 })
+      );
+      levier.position.z = 0.25;
+      disjoncteur.add(support, levier);
+      groupe.add(disjoncteur);
+      const etiquetteDisjoncteur = creerEtiquette3D("DISJONCTEUR  PROPULSION", 2.55, 0.34);
+      etiquetteDisjoncteur.position.set(-1.85, -1.25, 0.66);
+      groupe.add(etiquetteDisjoncteur);
+
+      // La trappe est également décorative pour cette première version.
+      const trappe = new THREE.Mesh(
+        new THREE.BoxGeometry(2.4, 1.45, 0.22),
+        new THREE.MeshStandardMaterial({ color: 0x344a58, roughness: 0.78, metalness: 0.26 })
+      );
+      trappe.position.set(1.72, -0.62, 0.68);
+      groupe.add(trappe);
+
+      const bordTrappe = new THREE.LineSegments(
+        new THREE.EdgesGeometry(new THREE.BoxGeometry(2.42, 1.47, 0.23)),
+        new THREE.LineBasicMaterial({ color: 0x708b9c })
+      );
+      bordTrappe.position.copy(trappe.position);
+      groupe.add(bordTrappe);
+
+      const etiquetteTrappe = creerEtiquette3D("TRAPPE D'ACCÈS", 1.65, 0.31);
+      etiquetteTrappe.position.set(1.72, -0.63, 0.82);
+      groupe.add(etiquetteTrappe);
+
+      voyant3D = new THREE.Mesh(
+        new THREE.SphereGeometry(0.24, 24, 18),
+        new THREE.MeshStandardMaterial({ color: 0xff9d2e, emissive: 0xff6a00, emissiveIntensity: 2.4 })
+      );
+      voyant3D.position.set(0, 1.9, 0.72);
+      groupe.add(voyant3D);
+
+      lumiereVoyant = new THREE.PointLight(0xff7a18, 2.3, 3.4);
+      lumiereVoyant.position.copy(voyant3D.position);
+      groupe.add(lumiereVoyant);
+
+      const etiquetteVoyant = creerEtiquette3D("PROPULSION", 1.7, 0.31);
+      etiquetteVoyant.position.set(0, 1.5, 0.69);
+      groupe.add(etiquetteVoyant);
+    }
+
+    function ajouterMultimetre3D() {
+      const appareil = new THREE.Group();
+      appareil.position.set(0, -2.05, 1.0);
+      appareil.rotation.x = -0.12;
+
+      const corps = new THREE.Mesh(
+        new THREE.BoxGeometry(1.75, 1.1, 0.35),
+        new THREE.MeshStandardMaterial({ color: 0xe5a227, roughness: 0.6 })
+      );
+      corps.castShadow = true;
+      appareil.add(corps);
+
+      const ecran = new THREE.Mesh(
+        new THREE.BoxGeometry(1.18, 0.35, 0.08),
+        new THREE.MeshStandardMaterial({ color: 0x9ac49f, emissive: 0x233f27, emissiveIntensity: 0.3 })
+      );
+      ecran.position.set(0, 0.25, 0.21);
+      appareil.add(ecran);
+
+      const selecteur = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.2, 0.2, 0.1, 24),
+        new THREE.MeshStandardMaterial({ color: 0x20272d, roughness: 0.42 })
+      );
+      selecteur.rotation.x = Math.PI / 2;
+      selecteur.position.set(0, -0.25, 0.25);
+      appareil.add(selecteur);
+      scene.add(appareil);
+    }
+
+    // Les libellés fixes sont dessinés dans une texture, sans police ni image externe.
+    function creerEtiquette3D(texte, largeur, hauteur) {
+      const canevas = document.createElement("canvas");
+      canevas.width = 700;
+      canevas.height = 110;
+      const contexte = canevas.getContext("2d");
+      contexte.fillStyle = "rgba(4, 11, 18, 0.88)";
+      contexte.fillRect(0, 0, canevas.width, canevas.height);
+      contexte.strokeStyle = "#6d8796";
+      contexte.lineWidth = 7;
+      contexte.strokeRect(4, 4, canevas.width - 8, canevas.height - 8);
+      contexte.fillStyle = "#e9f3f8";
+      contexte.font = "700 38px sans-serif";
+      contexte.textAlign = "center";
+      contexte.textBaseline = "middle";
+      contexte.fillText(texte, canevas.width / 2, canevas.height / 2 + 2);
+
+      const texture = new THREE.CanvasTexture(canevas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      const materiau = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: true });
+      const etiquette = new THREE.Sprite(materiau);
+      etiquette.scale.set(largeur, hauteur, 1);
+      return etiquette;
+    }
+
+    function brancherSelection() {
+      const canevas = rendu.domElement;
+
+      canevas.addEventListener("pointerdown", (evenement) => {
+        pointeurInitial = { x: evenement.clientX, y: evenement.clientY };
+      });
+
+      canevas.addEventListener("pointerup", (evenement) => {
+        if (!pointeurInitial) return;
+        const distance = Math.hypot(
+          evenement.clientX - pointeurInitial.x,
+          evenement.clientY - pointeurInitial.y
+        );
+        pointeurInitial = null;
+        if (distance > 9) return;
+
+        const rectangle = canevas.getBoundingClientRect();
+        const position = new THREE.Vector2(
+          ((evenement.clientX - rectangle.left) / rectangle.width) * 2 - 1,
+          -((evenement.clientY - rectangle.top) / rectangle.height) * 2 + 1
+        );
+        rayon.setFromCamera(position, camera);
+        const intersections = rayon.intersectObjects(pointsCliquables, false);
+        if (intersections.length) mesurerPoint(intersections[0].object.userData.id);
+      });
+
+      canevas.addEventListener("pointercancel", () => { pointeurInitial = null; });
+    }
+
+    function positionnerEtiquettes() {
+      const positionMonde = new THREE.Vector3();
+      pointsCliquables.forEach((point) => {
+        point.getWorldPosition(positionMonde);
+        positionMonde.project(camera);
+        const visible = positionMonde.z > -1 && positionMonde.z < 1;
+        const x = (positionMonde.x * 0.5 + 0.5) * ui.scene.clientWidth;
+        const y = (-positionMonde.y * 0.5 + 0.5) * ui.scene.clientHeight;
+        point.userData.etiquette.style.display = visible ? "block" : "none";
+        point.userData.etiquette.style.left = `${x}px`;
+        point.userData.etiquette.style.top = `${y}px`;
+      });
+    }
+
+    function redimensionnerScene() {
+      if (!rendu) return;
+      const largeur = ui.scene.clientWidth;
+      const hauteur = ui.scene.clientHeight;
+      const nouveauFacteur = calculerFacteurCamera(largeur, hauteur);
+
+      // En portrait, on recule sans changer l'angle choisi par l'apprenant.
+      if (nouveauFacteur !== facteurCamera) {
+        camera.position
+          .sub(controles.target)
+          .multiplyScalar(nouveauFacteur / facteurCamera)
+          .add(controles.target);
+        facteurCamera = nouveauFacteur;
+        controles.minDistance = 6.2 * facteurCamera;
+        controles.maxDistance = 12.5 * facteurCamera;
+
+        const nouvelleCibleY = calculerCibleCamera(facteurCamera);
+        camera.position.y += nouvelleCibleY - controles.target.y;
+        controles.target.y = nouvelleCibleY;
+      }
+
+      camera.aspect = largeur / hauteur;
+      camera.updateProjectionMatrix();
+      rendu.setSize(largeur, hauteur);
+      rendu.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    }
+
+    function calculerFacteurCamera(largeur, hauteur) {
+      const ratio = largeur / hauteur;
+      return Math.max(1, 0.98 / ratio);
+    }
+
+    function calculerCibleCamera(facteur) {
+      return 0.35 - Math.min(0.9, (facteur - 1) * 0.8);
+    }
+
+    function animer(temps = 0) {
+      requestAnimationFrame(animer);
+      controles.update();
+
+      // Le voyant reste orange et clignote tant que la réparation n'existe pas.
+      const pulsation = 0.32 + (Math.sin(temps * 0.006) + 1) * 0.34;
+      voyant3D.material.emissiveIntensity = 0.7 + pulsation * 2.2;
+      lumiereVoyant.intensity = 0.35 + pulsation * 2.1;
+
+      positionnerEtiquettes();
+      rendu.render(scene, camera);
+    }
+  </script>
+</body>
+</html>
