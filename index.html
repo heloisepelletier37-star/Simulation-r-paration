@@ -380,6 +380,11 @@
       letter-spacing: 0.02em;
     }
 
+    #valeur-mesure.hors-service {
+      font-size: clamp(1.35rem, 5vw, 2rem);
+      letter-spacing: 0;
+    }
+
     #unite-mesure {
       min-width: 1.2em;
       font-size: 1.5rem;
@@ -451,6 +456,178 @@
     .bulle-ines strong { display: block; margin-bottom: 3px; color: var(--cyan); }
     #message-ines { margin: 0; color: #e4edf3; line-height: 1.45; }
 
+    #bouton-son {
+      position: fixed;
+      z-index: 12;
+      top: max(16px, env(safe-area-inset-top));
+      left: 50%;
+      min-height: 44px;
+      padding: 8px 14px;
+      transform: translateX(-50%);
+      border: 1px solid var(--bordure);
+      border-radius: 99px;
+      background: rgba(5, 14, 25, 0.9);
+      color: var(--texte);
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+    }
+
+    #bouton-son:focus-visible,
+    .bouton-reparation:focus-visible,
+    #remplacer-fusible:focus-visible,
+    #fermer-trousse:focus-visible {
+      outline: 3px solid var(--cyan);
+      outline-offset: 2px;
+    }
+
+    .trousse-ui {
+      position: absolute;
+      z-index: 7;
+      top: 120px;
+      right: max(16px, env(safe-area-inset-right));
+      bottom: 170px;
+      width: min(390px, calc(100% - 32px));
+      padding: 18px;
+      overflow-y: auto;
+      border: 2px solid #6b8290;
+      border-radius: 18px;
+      background: rgba(12, 26, 38, 0.97);
+      box-shadow: var(--ombre);
+    }
+
+    .trousse-ui h2,
+    .trousse-ui h3 { margin: 0; }
+
+    .trousse-ui h2 {
+      color: var(--cyan);
+      font-size: 1.22rem;
+    }
+
+    .trousse-entete {
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    #fermer-trousse {
+      flex: 0 0 auto;
+      min-height: 38px;
+      padding: 6px 10px;
+      border: 1px solid #607887;
+      border-radius: 9px;
+      background: #253a48;
+      color: white;
+      font-size: 0.78rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .trousse-ui h3 {
+      margin-top: 18px;
+      color: var(--texte-doux);
+      font-size: 0.82rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    #liste-reparations {
+      display: grid;
+      gap: 9px;
+      margin-top: 14px;
+    }
+
+    .bouton-reparation,
+    #remplacer-fusible {
+      width: 100%;
+      min-height: 50px;
+      padding: 10px 12px;
+      border: 2px solid #526b7a;
+      border-radius: 11px;
+      background: #20384a;
+      color: white;
+      font-weight: 800;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .bouton-reparation:hover:not(:disabled),
+    #remplacer-fusible:hover:not(:disabled) { border-color: var(--cyan); }
+
+    .bouton-reparation:disabled,
+    #remplacer-fusible:disabled {
+      opacity: 0.46;
+      cursor: not-allowed;
+    }
+
+    #liste-stock {
+      display: grid;
+      gap: 7px;
+      margin: 9px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    #liste-stock li {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 7px 10px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.055);
+    }
+
+    .quantite-stock { color: var(--orange-clair); font-weight: 900; }
+
+    #remplacer-fusible { margin-top: 11px; background: #3d3348; }
+
+    .energie-entete {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 9px;
+      font-weight: 900;
+    }
+
+    .energie-entete h3 { margin-top: 0; }
+
+    .jauge-energie {
+      height: 14px;
+      margin-top: 8px;
+      overflow: hidden;
+      border-radius: 99px;
+      background: #0a1118;
+      box-shadow: inset 0 0 0 1px #415462;
+    }
+
+    #niveau-energie {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #f06647, #ffb33f 45%, #74e0a0);
+      transition: width 300ms ease;
+    }
+
+    #flash-arc {
+      position: fixed;
+      z-index: 30;
+      inset: 0;
+      background: white;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #flash-arc.actif { animation: flash-arc 430ms ease-out; }
+
+    @keyframes flash-arc {
+      0%, 12% { opacity: 0.96; }
+      28% { opacity: 0.12; }
+      45% { opacity: 0.78; }
+      100% { opacity: 0; }
+    }
+
     @media (max-width: 780px) {
       .barre-haute { align-items: stretch; }
       .etat-voyant { padding: 10px; }
@@ -459,6 +636,14 @@
       .multimetre-ui { bottom: max(184px, calc(env(safe-area-inset-bottom) + 184px)); }
       .bulle-ines { grid-template-columns: 44px 1fr; }
       .portrait-ines { width: 44px; height: 44px; }
+      #bouton-son { top: 116px; }
+      .trousse-ui {
+        top: 168px;
+        left: max(16px, env(safe-area-inset-left));
+        right: max(16px, env(safe-area-inset-right));
+        bottom: 280px;
+        width: auto;
+      }
     }
 
     @media (max-height: 680px) and (min-width: 781px) {
@@ -484,6 +669,9 @@
   </script>
 </head>
 <body>
+  <button id="bouton-son" type="button" disabled>Son</button>
+  <div id="flash-arc" aria-hidden="true"></div>
+
   <main>
     <section id="accueil" aria-labelledby="titre-principal">
       <div class="carte-accueil">
@@ -522,6 +710,26 @@
       </header>
 
       <p class="consigne-scene">Fais pivoter la vue. Utilise le disjoncteur, la trappe et les points de test.</p>
+
+      <aside id="trousse" class="trousse-ui masque" aria-labelledby="titre-trousse">
+        <div class="trousse-entete">
+          <h2 id="titre-trousse"></h2>
+          <button id="fermer-trousse" type="button"></button>
+        </div>
+        <div id="liste-reparations"></div>
+
+        <h3 id="titre-stock"></h3>
+        <ul id="liste-stock" aria-live="polite"></ul>
+        <button id="remplacer-fusible" type="button"></button>
+
+        <div class="energie-entete">
+          <h3 id="titre-energie"></h3>
+          <span id="valeur-energie">— %</span>
+        </div>
+        <div class="jauge-energie" role="progressbar" aria-label="Énergie" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0">
+          <span id="niveau-energie"></span>
+        </div>
+      </aside>
 
       <aside class="multimetre-ui" aria-label="Multimètre">
         <div class="multimetre-titre">
@@ -571,6 +779,19 @@
       statutMesure: document.querySelector("#statut-mesure"),
       boutonsMode: [...document.querySelectorAll(".bouton-mode")],
       etatCircuit: document.querySelector("#etat-circuit-valeur"),
+      boutonSon: document.querySelector("#bouton-son"),
+      flashArc: document.querySelector("#flash-arc"),
+      trousse: document.querySelector("#trousse"),
+      titreTrousse: document.querySelector("#titre-trousse"),
+      fermerTrousse: document.querySelector("#fermer-trousse"),
+      listeReparations: document.querySelector("#liste-reparations"),
+      titreStock: document.querySelector("#titre-stock"),
+      listeStock: document.querySelector("#liste-stock"),
+      remplacerFusible: document.querySelector("#remplacer-fusible"),
+      titreEnergie: document.querySelector("#titre-energie"),
+      valeurEnergie: document.querySelector("#valeur-energie"),
+      niveauEnergie: document.querySelector("#niveau-energie"),
+      jaugeEnergie: document.querySelector(".jauge-energie"),
       scene: document.querySelector("#scene-3d"),
       etiquettes: document.querySelector("#etiquettes-points")
     };
@@ -585,6 +806,15 @@
     let debutDecharge = null;
     let tensionsDebutDecharge = {};
     let trappeOuverte = false;
+    let stock = {};
+    let energie = 0;
+    let fusibleMultimetreFonctionnel = true;
+    let panneReparee = false;
+    let simulationTerminee = false;
+    let sonActif = true;
+    let contexteAudio = null;
+    let volumePrincipal = null;
+    let boutonsReparation = [];
 
     let scene;
     let camera;
@@ -609,6 +839,7 @@
         if (!reponse.ok) throw new Error(`Réponse HTTP ${reponse.status}`);
         donnees = await reponse.json();
         afficherChoixPannes();
+        initialiserMaintenance();
         ui.commencer.disabled = false;
         ui.commencer.textContent = "Commencer";
         ui.statutChargement.textContent = "Données prêtes.";
@@ -646,6 +877,209 @@
       });
     }
 
+    function initialiserMaintenance() {
+      stock = { ...donnees.stock_initial };
+      energie = donnees.energie_initiale;
+
+      ui.titreTrousse.textContent = donnees.interface.trousse_titre;
+      ui.fermerTrousse.textContent = donnees.interface.fermer_trousse;
+      ui.titreStock.textContent = donnees.interface.stock_titre;
+      ui.titreEnergie.textContent = donnees.interface.energie;
+      ui.remplacerFusible.textContent = donnees.interface.remplacer_fusible;
+      ui.boutonSon.disabled = false;
+      actualiserBoutonSon();
+
+      ui.listeReparations.replaceChildren();
+      boutonsReparation = donnees.reparations.map((reparation) => {
+        const bouton = document.createElement("button");
+        bouton.type = "button";
+        bouton.className = "bouton-reparation";
+        bouton.dataset.reparation = reparation.id;
+        bouton.textContent = reparation.libelle;
+        bouton.addEventListener("click", () => tenterReparation(reparation));
+        ui.listeReparations.append(bouton);
+        return bouton;
+      });
+
+      ui.remplacerFusible.addEventListener("click", remplacerFusibleMultimetre);
+      ui.fermerTrousse.addEventListener("click", basculerTrappe);
+      ui.boutonSon.addEventListener("click", basculerSon);
+      actualiserAffichageTrousse();
+    }
+
+    function actualiserAffichageTrousse() {
+      ui.listeStock.replaceChildren();
+      Object.entries(stock).forEach(([idPiece, quantite]) => {
+        const ligne = document.createElement("li");
+        const libelle = document.createElement("span");
+        const valeur = document.createElement("span");
+        libelle.textContent = donnees.libelles_stock[idPiece] ?? idPiece;
+        valeur.className = "quantite-stock";
+        valeur.textContent = quantite;
+        ligne.append(libelle, valeur);
+        ui.listeStock.append(ligne);
+      });
+
+      const energieAffichee = Math.max(0, Math.round(energie));
+      const pourcentage = donnees.energie_initiale > 0
+        ? (energie / donnees.energie_initiale) * 100
+        : 0;
+      ui.valeurEnergie.textContent = `${energieAffichee} %`;
+      ui.niveauEnergie.style.width = `${Math.max(0, Math.min(100, pourcentage))}%`;
+      ui.jaugeEnergie.setAttribute("aria-valuemax", donnees.energie_initiale);
+      ui.jaugeEnergie.setAttribute("aria-valuenow", energieAffichee);
+
+      boutonsReparation.forEach((bouton) => {
+        const reparation = donnees.reparations.find((element) => element.id === bouton.dataset.reparation);
+        const pieceIndisponible = reparation?.consomme && stock[reparation.consomme] <= 0;
+        bouton.disabled = simulationTerminee || panneReparee || Boolean(pieceIndisponible);
+      });
+
+      ui.remplacerFusible.disabled = simulationTerminee
+        || fusibleMultimetreFonctionnel
+        || stock.fusible_multimetre <= 0;
+    }
+
+    function tenterReparation(reparation) {
+      if (simulationTerminee) return;
+
+      if (etatCircuit !== "CONSIGNE") {
+        declencherErreurCritique("intervention_sous_tension", true);
+        return;
+      }
+
+      const reparationCorrecte = reparation.id === panneChoisie.reparation_correcte;
+      if (reparationCorrecte) {
+        if (reparation.consomme && stock[reparation.consomme] <= 0) return;
+        if (reparation.consomme) stock[reparation.consomme] -= 1;
+        panneReparee = true;
+        ui.messageInes.textContent = donnees.messages_ines.reparation_ok;
+        actualiserAffichageTrousse();
+        return;
+      }
+
+      // Seul un remplacement inutile gaspille une pièce ; un nettoyage ne consomme rien.
+      if (reparation.consomme && stock[reparation.consomme] > 0) {
+        stock[reparation.consomme] -= 1;
+        declencherErreurCritique("piece_gaspillee");
+      }
+    }
+
+    function declencherErreurCritique(idErreur, avecArc = false) {
+      const erreur = donnees.erreurs_critiques.find((element) => element.id === idErreur);
+      if (!erreur) return;
+
+      energie = Math.max(0, energie + erreur.energie);
+      ui.messageInes.textContent = erreur.message_ines;
+      if (avecArc) declencherArcElectrique();
+      actualiserAffichageTrousse();
+
+      if (energie === 0) terminerParEpuisement();
+    }
+
+    function terminerParEpuisement() {
+      simulationTerminee = true;
+      arreterMesureInstable();
+      ui.messageInes.textContent = donnees.messages_ines.energie_epuisee;
+      ui.boutonsMode.forEach((bouton) => { bouton.disabled = true; });
+      actualiserAffichageTrousse();
+    }
+
+    function remplacerFusibleMultimetre() {
+      if (
+        simulationTerminee
+        || fusibleMultimetreFonctionnel
+        || stock.fusible_multimetre <= 0
+      ) return;
+
+      stock.fusible_multimetre -= 1;
+      fusibleMultimetreFonctionnel = true;
+      actualiserAffichageTrousse();
+      changerMode(modeMultimetre);
+    }
+
+    function afficherMultimetreHorsService() {
+      ui.valeur.classList.add("hors-service");
+      ui.valeur.textContent = donnees.interface.hors_service;
+      ui.unite.textContent = "";
+      ui.statutMesure.textContent = donnees.interface.hors_service;
+    }
+
+    function verifierOhmmetre(idPoint) {
+      const tension = calculerTension(idPoint);
+      if (tension > donnees.seuil_absence_tension) {
+        fusibleMultimetreFonctionnel = false;
+        afficherMultimetreHorsService();
+        declencherErreurCritique("ohmmetre_sous_tension");
+        return;
+      }
+
+      ui.valeur.textContent = "— — —";
+      ui.unite.textContent = "Ω";
+    }
+
+    function declencherArcElectrique() {
+      ui.flashArc.classList.remove("actif");
+      void ui.flashArc.offsetWidth;
+      ui.flashArc.classList.add("actif");
+      window.setTimeout(() => ui.flashArc.classList.remove("actif"), 450);
+      jouerGresillement();
+    }
+
+    function obtenirContexteAudio() {
+      if (!contexteAudio) {
+        const ConstructeurAudio = window.AudioContext || window.webkitAudioContext;
+        if (!ConstructeurAudio) return null;
+        contexteAudio = new ConstructeurAudio();
+        volumePrincipal = contexteAudio.createGain();
+        volumePrincipal.gain.value = sonActif ? 1 : 0;
+        volumePrincipal.connect(contexteAudio.destination);
+      }
+      return contexteAudio;
+    }
+
+    function jouerGresillement() {
+      if (!sonActif) return;
+      const audio = obtenirContexteAudio();
+      if (!audio) return;
+      if (audio.state === "suspended") audio.resume();
+
+      const duree = 0.42;
+      const tampon = audio.createBuffer(1, audio.sampleRate * duree, audio.sampleRate);
+      const donneesSonores = tampon.getChannelData(0);
+      for (let index = 0; index < donneesSonores.length; index += 1) {
+        const enveloppe = 1 - index / donneesSonores.length;
+        donneesSonores[index] = (Math.random() * 2 - 1) * enveloppe;
+      }
+
+      const source = audio.createBufferSource();
+      const filtre = audio.createBiquadFilter();
+      const volumeArc = audio.createGain();
+      source.buffer = tampon;
+      filtre.type = "bandpass";
+      filtre.frequency.value = 1600;
+      filtre.Q.value = 0.8;
+      volumeArc.gain.setValueAtTime(0.24, audio.currentTime);
+      volumeArc.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + duree);
+      source.connect(filtre).connect(volumeArc).connect(volumePrincipal);
+      source.start();
+    }
+
+    function basculerSon() {
+      sonActif = !sonActif;
+      if (volumePrincipal && contexteAudio) {
+        volumePrincipal.gain.setValueAtTime(sonActif ? 1 : 0, contexteAudio.currentTime);
+      }
+      actualiserBoutonSon();
+    }
+
+    function actualiserBoutonSon() {
+      ui.boutonSon.textContent = sonActif
+        ? donnees.interface.couper_son
+        : donnees.interface.activer_son;
+      ui.boutonSon.setAttribute("aria-pressed", String(!sonActif));
+    }
+
     ui.commencer.addEventListener("click", () => {
       const choix = document.querySelector('input[name="panne"]:checked');
       panneChoisie = donnees.pannes.find((panne) => String(panne.id) === choix?.value);
@@ -671,6 +1105,13 @@
         bouton.setAttribute("aria-pressed", String(bouton.dataset.mode === nouveauMode));
       });
 
+      if (!fusibleMultimetreFonctionnel) {
+        afficherMultimetreHorsService();
+        return;
+      }
+
+      ui.valeur.classList.remove("hors-service");
+
       if (nouveauMode === "arret") {
         ui.valeur.textContent = "— — —";
         ui.unite.textContent = "";
@@ -689,9 +1130,20 @@
     }
 
     function mesurerPoint(idPoint) {
+      if (simulationTerminee) return;
       arreterMesureInstable();
       marquerPointActif(idPoint);
       ui.pointMesure.textContent = idPoint;
+
+      if (!fusibleMultimetreFonctionnel) {
+        afficherMultimetreHorsService();
+        return;
+      }
+
+      if (modeMultimetre === "ohms") {
+        verifierOhmmetre(idPoint);
+        return;
+      }
 
       if (modeMultimetre !== "volts") {
         ui.statutMesure.textContent = modeMultimetre === "arret"
@@ -809,6 +1261,7 @@
     }
 
     function basculerDisjoncteur() {
+      if (simulationTerminee) return;
       disjoncteurOuvert = !disjoncteurOuvert;
 
       if (disjoncteurOuvert) {
@@ -832,7 +1285,17 @@
     }
 
     function basculerTrappe() {
+      if (simulationTerminee) return;
       trappeOuverte = !trappeOuverte;
+      const ouvertureDemandee = trappeOuverte;
+
+      // L'affichage attend la fin du geste tactile pour éviter qu'un clic synthétique
+      // n'active immédiatement un bouton apparu sous le doigt.
+      window.setTimeout(() => {
+        if (trappeOuverte !== ouvertureDemandee) return;
+        ui.trousse.classList.toggle("masque", !ouvertureDemandee);
+        if (ouvertureDemandee) actualiserAffichageTrousse();
+      }, 0);
     }
 
     function actualiserMesureActive() {
