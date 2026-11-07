@@ -211,7 +211,7 @@
       pointer-events: none;
     }
 
-    .identite-mission, .etat-voyant {
+    .identite-mission, .etat-voyant, .etat-circuit {
       padding: 10px 14px;
       border: 1px solid var(--bordure);
       border-radius: 12px;
@@ -233,6 +233,24 @@
       font-size: 0.82rem;
       line-height: 1.3;
     }
+
+    .indicateurs-haut {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      align-items: flex-end;
+    }
+
+    .etat-circuit {
+      padding: 6px 9px;
+      color: var(--texte-doux);
+      font-size: 0.67rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    #etat-circuit-valeur { color: var(--cyan); }
 
     .etat-voyant {
       display: flex;
@@ -437,7 +455,7 @@
       .barre-haute { align-items: stretch; }
       .etat-voyant { padding: 10px; }
       .etat-voyant span:last-child { display: none; }
-      .consigne-scene { top: 116px; }
+      .consigne-scene { display: none; }
       .multimetre-ui { bottom: max(184px, calc(env(safe-area-inset-bottom) + 184px)); }
       .bulle-ines { grid-template-columns: 44px 1fr; }
       .portrait-ines { width: 44px; height: 44px; }
@@ -492,13 +510,18 @@
           <strong>Mission Retour</strong>
           <span id="panne-active"></span>
         </div>
-        <div class="etat-voyant" aria-label="Voyant propulsion orange clignotant">
-          <span class="pastille-voyant"></span>
-          <span>PROPULSION</span>
+        <div class="indicateurs-haut">
+          <div class="etat-circuit" aria-live="polite">
+            État · <strong id="etat-circuit-valeur">SOUS_TENSION</strong>
+          </div>
+          <div class="etat-voyant" aria-label="Voyant propulsion orange clignotant">
+            <span class="pastille-voyant"></span>
+            <span>PROPULSION</span>
+          </div>
         </div>
       </header>
 
-      <p class="consigne-scene">Fais pivoter la vue, règle le multimètre, puis touche un point de test.</p>
+      <p class="consigne-scene">Fais pivoter la vue. Utilise le disjoncteur, la trappe et les points de test.</p>
 
       <aside class="multimetre-ui" aria-label="Multimètre">
         <div class="multimetre-titre">
@@ -531,7 +554,7 @@
     import * as THREE from "three";
     import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
-    // Ce chemin est adapté dans la copie versions/v1.html.
+    // Ce chemin est adapté dans chaque copie conservée dans versions/.
     const CHEMIN_DONNEES = "./data.json";
 
     const ui = {
@@ -547,6 +570,7 @@
       pointMesure: document.querySelector("#point-mesure"),
       statutMesure: document.querySelector("#statut-mesure"),
       boutonsMode: [...document.querySelectorAll(".bouton-mode")],
+      etatCircuit: document.querySelector("#etat-circuit-valeur"),
       scene: document.querySelector("#scene-3d"),
       etiquettes: document.querySelector("#etiquettes-points")
     };
@@ -556,6 +580,11 @@
     let modeMultimetre = "arret";
     let minuterieMesure = null;
     let pointActif = null;
+    let etatCircuit = "SOUS_TENSION";
+    let disjoncteurOuvert = false;
+    let debutDecharge = null;
+    let tensionsDebutDecharge = {};
+    let trappeOuverte = false;
 
     let scene;
     let camera;
@@ -564,7 +593,10 @@
     let rayon;
     let voyant3D;
     let lumiereVoyant;
+    let levierDisjoncteur;
+    let pivotTrappe;
     let pointsCliquables = [];
+    let objetsInteractifs = [];
     let pointeurInitial = null;
     let facteurCamera = 1;
 
@@ -674,11 +706,25 @@
         return;
       }
 
+      const point = donnees.points_de_test.find((element) => element.id === idPoint);
+      const estEnAval = point && !point.amont_disjoncteur;
+
       const actualiser = () => {
-        const valeur = mesure.instable
-          ? mesure.min + Math.random() * (mesure.max - mesure.min)
-          : (mesure.min + mesure.max) / 2;
-        ui.valeur.textContent = valeur.toFixed(1);
+        const valeur = calculerTension(idPoint);
+        const valeurAffichee = Number(valeur.toFixed(1));
+        ui.valeur.textContent = valeurAffichee.toFixed(1);
+
+        if (
+          etatCircuit === "DECHARGE"
+          && estEnAval
+          && valeurAffichee < donnees.seuil_absence_tension
+        ) {
+          passerEnConsigne();
+        }
+
+        if (estEnAval && valeurAffichee === 0 && minuterieMesure !== null) {
+          arreterMesureInstable();
+        }
       };
 
       actualiser();
@@ -687,9 +733,46 @@
         ? `${idPoint} · valeur instable`
         : `${idPoint} · mesure stable`;
 
-      if (mesure.instable) {
-        minuterieMesure = window.setInterval(actualiser, donnees.intervalle_instable_ms);
+      const circuitEnDecharge = estEnAval
+        && (etatCircuit === "DECHARGE" || etatCircuit === "CONSIGNE")
+        && calculerFacteurDecharge() > 0;
+
+      if (circuitEnDecharge || mesure.instable) {
+        const intervalle = circuitEnDecharge ? 100 : donnees.intervalle_instable_ms;
+        minuterieMesure = window.setInterval(actualiser, intervalle);
       }
+    }
+
+    function calculerTension(idPoint) {
+      const point = donnees.points_de_test.find((element) => element.id === idPoint);
+      const circuitOuvert = etatCircuit === "DECHARGE" || etatCircuit === "CONSIGNE";
+
+      if (!point || point.amont_disjoncteur || !circuitOuvert) {
+        return calculerTensionSousTension(idPoint);
+      }
+
+      const tensionInitiale = tensionsDebutDecharge[idPoint] ?? calculerTensionSousTension(idPoint);
+      return tensionInitiale * calculerFacteurDecharge();
+    }
+
+    // Sous tension, les valeurs restent strictement celles de la tâche 1.
+    function calculerTensionSousTension(idPoint) {
+      const mesure = panneChoisie.mesures[idPoint];
+      if (!mesure) return 0;
+      return mesure.instable
+        ? mesure.min + Math.random() * (mesure.max - mesure.min)
+        : (mesure.min + mesure.max) / 2;
+    }
+
+    function calculerFacteurDecharge() {
+      if (debutDecharge === null) return 0;
+      const duree = donnees.decharge_secondes * 1000;
+      return Math.max(0, 1 - (performance.now() - debutDecharge) / duree);
+    }
+
+    function passerEnConsigne() {
+      changerEtatCircuit("CONSIGNE");
+      ui.messageInes.textContent = donnees.messages_ines.consigne_ok;
     }
 
     function arreterMesureInstable() {
@@ -707,6 +790,41 @@
         point.scale.setScalar(actif ? 1.22 : 1);
         point.userData.etiquette?.classList.toggle("active", actif);
       });
+    }
+
+    function changerEtatCircuit(nouvelEtat) {
+      etatCircuit = nouvelEtat;
+      ui.etatCircuit.textContent = nouvelEtat;
+    }
+
+    function basculerDisjoncteur() {
+      disjoncteurOuvert = !disjoncteurOuvert;
+
+      if (disjoncteurOuvert) {
+        // On mémorise les tensions de départ pour obtenir une descente continue,
+        // y compris lorsque la panne produit normalement une valeur instable.
+        tensionsDebutDecharge = Object.fromEntries(
+          donnees.points_de_test.map((point) => [point.id, calculerTensionSousTension(point.id)])
+        );
+        debutDecharge = performance.now();
+        changerEtatCircuit("DECHARGE");
+      } else {
+        const nouvelEtat = etatCircuit === "CONSIGNE"
+          ? "REMISE_SOUS_TENSION"
+          : "SOUS_TENSION";
+        debutDecharge = null;
+        changerEtatCircuit(nouvelEtat);
+      }
+
+      actualiserMesureActive();
+    }
+
+    function basculerTrappe() {
+      trappeOuverte = !trappeOuverte;
+    }
+
+    function actualiserMesureActive() {
+      if (pointActif && modeMultimetre === "volts") mesurerPoint(pointActif);
     }
 
     function creerScene3D() {
@@ -801,7 +919,7 @@
       facade.position.z = 0.5;
       groupe.add(facade);
 
-      // Les trois bornes sont les seuls objets interactifs de cette étape.
+      // Les bornes restent sélectionnables pendant les animations du boîtier.
       const positions = [-2.1, 0, 2.1];
       donnees.points_de_test.forEach((point, index) => {
         const borne = new THREE.Mesh(
@@ -818,6 +936,7 @@
         borne.castShadow = true;
         borne.userData.id = point.id;
         borne.userData.nom = point.nom;
+        borne.userData.action = "mesurer";
 
         const anneau = new THREE.Mesh(
           new THREE.TorusGeometry(0.43, 0.055, 12, 40),
@@ -832,44 +951,62 @@
         ui.etiquettes.append(etiquette);
         borne.userData.etiquette = etiquette;
         pointsCliquables.push(borne);
+        objetsInteractifs.push(borne);
       });
 
-      // Le disjoncteur est visible mais volontairement inactif dans la tâche 1.
+      // Le levier et son support partagent la même commande de disjoncteur.
       const disjoncteur = new THREE.Group();
       disjoncteur.position.set(-1.85, -0.55, 0.7);
       const support = new THREE.Mesh(
         new THREE.BoxGeometry(1.5, 1.05, 0.24),
         new THREE.MeshStandardMaterial({ color: 0x354854, roughness: 0.65 })
       );
-      const levier = new THREE.Mesh(
+      levierDisjoncteur = new THREE.Mesh(
         new THREE.BoxGeometry(0.38, 0.72, 0.3),
         new THREE.MeshStandardMaterial({ color: 0xe4e9e9, roughness: 0.46 })
       );
-      levier.position.z = 0.25;
-      disjoncteur.add(support, levier);
+      support.userData.action = "disjoncteur";
+      levierDisjoncteur.userData.action = "disjoncteur";
+      levierDisjoncteur.position.z = 0.25;
+      disjoncteur.add(support, levierDisjoncteur);
       groupe.add(disjoncteur);
+      objetsInteractifs.push(support, levierDisjoncteur);
       const etiquetteDisjoncteur = creerEtiquette3D("DISJONCTEUR  PROPULSION", 2.55, 0.34);
       etiquetteDisjoncteur.position.set(-1.85, -1.25, 0.66);
       groupe.add(etiquetteDisjoncteur);
 
-      // La trappe est également décorative pour cette première version.
+      // Un renfoncement sombre reste visible lorsque la trappe pivote sur sa charnière gauche.
+      const interieurTrappe = new THREE.Mesh(
+        new THREE.BoxGeometry(2.38, 1.43, 0.14),
+        new THREE.MeshStandardMaterial({ color: 0x09131b, roughness: 0.9, metalness: 0.1 })
+      );
+      interieurTrappe.position.set(1.72, -0.62, 0.58);
+      interieurTrappe.userData.action = "trappe";
+      groupe.add(interieurTrappe);
+      objetsInteractifs.push(interieurTrappe);
+
+      pivotTrappe = new THREE.Group();
+      pivotTrappe.position.set(0.52, -0.62, 0.7);
       const trappe = new THREE.Mesh(
         new THREE.BoxGeometry(2.4, 1.45, 0.22),
         new THREE.MeshStandardMaterial({ color: 0x344a58, roughness: 0.78, metalness: 0.26 })
       );
-      trappe.position.set(1.72, -0.62, 0.68);
-      groupe.add(trappe);
+      trappe.position.set(1.2, 0, 0);
+      trappe.userData.action = "trappe";
+      pivotTrappe.add(trappe);
+      objetsInteractifs.push(trappe);
 
       const bordTrappe = new THREE.LineSegments(
         new THREE.EdgesGeometry(new THREE.BoxGeometry(2.42, 1.47, 0.23)),
         new THREE.LineBasicMaterial({ color: 0x708b9c })
       );
       bordTrappe.position.copy(trappe.position);
-      groupe.add(bordTrappe);
+      pivotTrappe.add(bordTrappe);
 
       const etiquetteTrappe = creerEtiquette3D("TRAPPE D'ACCÈS", 1.65, 0.31);
-      etiquetteTrappe.position.set(1.72, -0.63, 0.82);
-      groupe.add(etiquetteTrappe);
+      etiquetteTrappe.position.set(1.2, 0, 0.14);
+      pivotTrappe.add(etiquetteTrappe);
+      groupe.add(pivotTrappe);
 
       voyant3D = new THREE.Mesh(
         new THREE.SphereGeometry(0.24, 24, 18),
@@ -963,8 +1100,13 @@
           -((evenement.clientY - rectangle.top) / rectangle.height) * 2 + 1
         );
         rayon.setFromCamera(position, camera);
-        const intersections = rayon.intersectObjects(pointsCliquables, false);
-        if (intersections.length) mesurerPoint(intersections[0].object.userData.id);
+        const intersections = rayon.intersectObjects(objetsInteractifs, false);
+        if (!intersections.length) return;
+
+        const objet = intersections[0].object;
+        if (objet.userData.action === "mesurer") mesurerPoint(objet.userData.id);
+        if (objet.userData.action === "disjoncteur") basculerDisjoncteur();
+        if (objet.userData.action === "trappe") basculerTrappe();
       });
 
       canevas.addEventListener("pointercancel", () => { pointeurInitial = null; });
@@ -1017,7 +1159,7 @@
     }
 
     function calculerCibleCamera(facteur) {
-      return 0.35 - Math.min(0.9, (facteur - 1) * 0.8);
+      return 0.35 - Math.min(3.05, (facteur - 1) * 2.8);
     }
 
     function animer(temps = 0) {
@@ -1028,6 +1170,22 @@
       const pulsation = 0.32 + (Math.sin(temps * 0.006) + 1) * 0.34;
       voyant3D.material.emissiveIntensity = 0.7 + pulsation * 2.2;
       lumiereVoyant.intensity = 0.35 + pulsation * 2.1;
+
+      const angleLevier = disjoncteurOuvert ? -0.72 : 0;
+      const hauteurLevier = disjoncteurOuvert ? -0.12 : 0;
+      levierDisjoncteur.rotation.z = THREE.MathUtils.lerp(
+        levierDisjoncteur.rotation.z,
+        angleLevier,
+        0.14
+      );
+      levierDisjoncteur.position.y = THREE.MathUtils.lerp(
+        levierDisjoncteur.position.y,
+        hauteurLevier,
+        0.14
+      );
+
+      const angleTrappe = trappeOuverte ? -1.35 : 0;
+      pivotTrappe.rotation.y = THREE.MathUtils.lerp(pivotTrappe.rotation.y, angleTrappe, 0.12);
 
       positionnerEtiquettes();
       rendu.render(scene, camera);
