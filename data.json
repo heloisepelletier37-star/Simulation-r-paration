@@ -5,6 +5,17 @@
   "decharge_secondes": 30,
   "seuil_absence_tension": 0.5,
   "intervalle_instable_ms": 300,
+  "delai_aide_secondes": 15,
+  "modes": {
+    "entrainement": {
+      "libelle": "Entraînement",
+      "description": "Choisis la panne et reçois des aides graduées en cas de blocage."
+    },
+    "mission_reelle": {
+      "libelle": "Mission réelle",
+      "description": "La panne est tirée au hasard et aucune aide n'est affichée."
+    }
+  },
   "points_de_test": [
     { "id": "TP1", "nom": "Sortie de la batterie", "nominal": 28, "tolerance": 1, "amont_disjoncteur": true },
     { "id": "TP2", "nom": "Sortie du convertisseur", "nominal": 12, "tolerance": 0.5, "amont_disjoncteur": false },
@@ -67,6 +78,12 @@
     "energie": "Énergie",
     "remplacer_fusible": "Remplacer le fusible du multimètre",
     "hors_service": "HORS SERVICE",
+    "lancer_demarrage": "Lancer la séquence de démarrage",
+    "ecran_fin_titre": "Mission terminée",
+    "choisir_mode": "Choisir le mode",
+    "choisir_panne": "Choisir la panne",
+    "panne_inconnue": "Panne inconnue",
+    "aide": "Aide",
     "couper_son": "Couper le son",
     "activer_son": "Activer le son"
   },
@@ -102,6 +119,21 @@
     "demarrage_refuse": "Séquence refusée : la validation n'est pas faite. Mesure les trois points après la remise sous tension.",
     "energie_epuisee": "La batterie est épuisée. La mission s'arrête ici : regardons ensemble ce qui s'est passé.",
     "fin": "Voyant vert, moteurs prêts. Bravo, Hugo, tu rentres à la maison."
+  },
+  "debriefing": {
+    "titre_reussite": "Mission terminée",
+    "titre_echec": "Batterie épuisée",
+    "mode": "Mode",
+    "temps_total": "Temps total",
+    "energie_restante": "Énergie restante",
+    "criteres": "Critères de réussite",
+    "erreurs": "Erreurs rencontrées",
+    "aucune_erreur": "Aucune erreur critique.",
+    "aides": "Aides utilisées",
+    "aucune_aide": "Aucune aide utilisée.",
+    "journal": "Journal des actions",
+    "rejouer": "Rejouer",
+    "changer_mode": "Changer de mode"
   },
   "aides": {
     "SOUS_TENSION": [

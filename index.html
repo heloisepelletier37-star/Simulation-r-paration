@@ -101,6 +101,49 @@
       font-weight: 800;
     }
 
+    #selection-panne { margin-top: 24px; }
+
+    #choix-modes {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .choix-mode {
+      position: relative;
+      display: grid;
+      gap: 5px;
+      min-height: 118px;
+      align-content: center;
+      padding: 16px;
+      border: 2px solid transparent;
+      border-radius: 15px;
+      background: #102237;
+      cursor: pointer;
+      transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+    }
+
+    .choix-mode:hover { transform: translateY(-1px); }
+
+    .choix-mode:has(input:checked) {
+      border-color: var(--cyan);
+      background: #123149;
+    }
+
+    .choix-mode:has(input:focus-visible) {
+      outline: 3px solid white;
+      outline-offset: 3px;
+    }
+
+    .choix-mode input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .choix-mode strong { color: var(--cyan); font-size: 1.08rem; }
+    .choix-mode span { color: var(--texte-doux); line-height: 1.4; }
+
     #choix-pannes {
       display: grid;
       gap: 10px;
@@ -242,6 +285,7 @@
     }
 
     .etat-circuit {
+      display: none;
       padding: 6px 9px;
       color: var(--texte-doux);
       font-size: 0.67rem;
@@ -268,6 +312,12 @@
       background: var(--orange);
       box-shadow: 0 0 16px var(--orange);
       animation: clignoter 1s ease-in-out infinite;
+    }
+
+    .pastille-voyant.valide {
+      background: #48e08b;
+      box-shadow: 0 0 16px #48e08b;
+      animation: none;
     }
 
     @keyframes clignoter { 50% { opacity: 0.22; box-shadow: 0 0 3px var(--orange); } }
@@ -473,13 +523,166 @@
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
     }
 
+    #lancer-demarrage {
+      position: absolute;
+      z-index: 6;
+      top: 154px;
+      left: 50%;
+      min-height: 50px;
+      padding: 10px 18px;
+      transform: translateX(-50%);
+      border: 2px solid var(--orange);
+      border-radius: 12px;
+      background: rgba(75, 44, 16, 0.94);
+      color: white;
+      font-weight: 900;
+      white-space: nowrap;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
+    }
+
+    #lancer-demarrage:hover { background: #69401c; }
+    #lancer-demarrage:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .aide-scene {
+      position: absolute;
+      z-index: 6;
+      top: 220px;
+      left: 50%;
+      width: min(620px, calc(100% - 32px));
+      transform: translateX(-50%);
+      margin: 0;
+      padding: 12px 16px;
+      border: 2px solid var(--cyan);
+      border-radius: 13px;
+      background: rgba(8, 34, 49, 0.96);
+      color: white;
+      line-height: 1.45;
+      text-align: center;
+      box-shadow: var(--ombre);
+    }
+
+    .element-aide {
+      animation: element-aide 850ms ease-in-out infinite alternate !important;
+    }
+
+    @keyframes element-aide {
+      from { filter: drop-shadow(0 0 0 rgba(102, 229, 255, 0)); }
+      to { filter: drop-shadow(0 0 16px var(--cyan)); outline-color: var(--cyan); }
+    }
+
     #bouton-son:focus-visible,
+    #lancer-demarrage:focus-visible,
     .bouton-reparation:focus-visible,
     #remplacer-fusible:focus-visible,
     #fermer-trousse:focus-visible {
       outline: 3px solid var(--cyan);
       outline-offset: 2px;
     }
+
+    .ecran-fin {
+      position: absolute;
+      z-index: 10;
+      inset: 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 24px;
+      overflow-y: auto;
+      background: rgba(3, 10, 17, 0.88);
+      backdrop-filter: blur(10px);
+    }
+
+    .carte-fin {
+      width: min(900px, 100%);
+      margin: auto 0;
+      padding: clamp(24px, 5vw, 44px);
+      border: 2px solid #48e08b;
+      border-radius: 24px;
+      background: #0c2230;
+      box-shadow: var(--ombre);
+    }
+
+    .ecran-fin.echec .carte-fin { border-color: var(--orange); }
+
+    .carte-fin h2 {
+      margin: 0 0 16px;
+      color: #72efa7;
+      font-size: clamp(2rem, 8vw, 3.8rem);
+      text-align: center;
+    }
+
+    .ecran-fin.echec .carte-fin h2 { color: var(--orange-clair); }
+    .carte-fin > p { margin: 0; font-size: 1.15rem; line-height: 1.55; text-align: center; }
+
+    .resume-debrief {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 24px 0;
+    }
+
+    .resume-debrief div {
+      padding: 12px;
+      border-radius: 11px;
+      background: rgba(255, 255, 255, 0.06);
+      text-align: center;
+    }
+
+    .resume-debrief dt { color: var(--texte-doux); }
+    .resume-debrief dd { margin: 5px 0 0; font-weight: 900; }
+
+    .bloc-debrief { margin-top: 22px; }
+    .bloc-debrief h3 { margin: 0 0 10px; color: var(--cyan); font-size: 1.15rem; }
+
+    .liste-debrief {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .liste-debrief li {
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.055);
+      line-height: 1.45;
+    }
+
+    .liste-criteres li { display: grid; grid-template-columns: 30px 1fr; gap: 8px; }
+    .critere-ok { color: #72efa7; }
+    .critere-echec { color: #ffb49e; }
+
+    .journal-debrief summary {
+      min-height: 48px;
+      padding: 11px 13px;
+      border: 1px solid var(--bordure);
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 900;
+    }
+
+    .journal-debrief .liste-debrief { margin-top: 9px; }
+
+    .actions-debrief {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 26px;
+    }
+
+    .actions-debrief button {
+      min-height: 54px;
+      border: 2px solid var(--cyan);
+      border-radius: 12px;
+      background: #17394b;
+      color: white;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .actions-debrief button:first-child { border-color: var(--orange); background: #5a3617; }
 
     .trousse-ui {
       position: absolute;
@@ -629,6 +832,7 @@
     }
 
     @media (max-width: 780px) {
+      #choix-modes { grid-template-columns: 1fr; }
       .barre-haute { align-items: stretch; }
       .etat-voyant { padding: 10px; }
       .etat-voyant span:last-child { display: none; }
@@ -637,6 +841,15 @@
       .bulle-ines { grid-template-columns: 44px 1fr; }
       .portrait-ines { width: 44px; height: 44px; }
       #bouton-son { top: 116px; }
+      #lancer-demarrage {
+        top: 168px;
+        max-width: calc(100% - 32px);
+        white-space: normal;
+      }
+      .aide-scene { top: 236px; }
+      .resume-debrief, .actions-debrief { grid-template-columns: 1fr; }
+      .ecran-fin { padding: 12px; }
+      .carte-fin { padding: 22px 16px; }
       .trousse-ui {
         top: 168px;
         left: max(16px, env(safe-area-inset-left));
@@ -677,10 +890,15 @@
       <div class="carte-accueil">
         <p class="surtitre">Simulation de diagnostic</p>
         <h1 id="titre-principal">Mission Retour</h1>
-        <p class="introduction">Le circuit de propulsion est en panne. Choisis le scénario à examiner, puis relève les tensions sur le boîtier.</p>
+        <p class="introduction">Le circuit de propulsion est en panne. Choisis ton mode, puis relève les tensions sur le boîtier pour trouver la cause.</p>
 
         <fieldset>
-          <legend>Choisir la panne</legend>
+          <legend id="titre-choix-mode"></legend>
+          <div id="choix-modes"></div>
+        </fieldset>
+
+        <fieldset id="selection-panne">
+          <legend id="titre-choix-panne"></legend>
           <div id="choix-pannes" aria-live="polite"></div>
         </fieldset>
 
@@ -710,6 +928,8 @@
       </header>
 
       <p class="consigne-scene">Fais pivoter la vue. Utilise le disjoncteur, la trappe et les points de test.</p>
+      <button id="lancer-demarrage" type="button"></button>
+      <p id="aide-scene" class="aide-scene masque" role="status"></p>
 
       <aside id="trousse" class="trousse-ui masque" aria-labelledby="titre-trousse">
         <div class="trousse-entete">
@@ -755,6 +975,38 @@
           <p id="message-ines"></p>
         </div>
       </aside>
+
+      <section id="ecran-fin" class="ecran-fin masque" aria-labelledby="titre-fin">
+        <div class="carte-fin">
+          <h2 id="titre-fin"></h2>
+          <p id="message-fin"></p>
+          <dl class="resume-debrief">
+            <div><dt id="libelle-mode-fin"></dt><dd id="mode-fin"></dd></div>
+            <div><dt id="libelle-temps-fin"></dt><dd id="temps-fin"></dd></div>
+            <div><dt id="libelle-energie-fin"></dt><dd id="energie-fin"></dd></div>
+          </dl>
+          <section class="bloc-debrief" aria-labelledby="titre-criteres-fin">
+            <h3 id="titre-criteres-fin"></h3>
+            <ul id="liste-criteres-fin" class="liste-debrief liste-criteres"></ul>
+          </section>
+          <section class="bloc-debrief" aria-labelledby="titre-erreurs-fin">
+            <h3 id="titre-erreurs-fin"></h3>
+            <ul id="liste-erreurs-fin" class="liste-debrief"></ul>
+          </section>
+          <section class="bloc-debrief" aria-labelledby="titre-aides-fin">
+            <h3 id="titre-aides-fin"></h3>
+            <ul id="liste-aides-fin" class="liste-debrief"></ul>
+          </section>
+          <details class="bloc-debrief journal-debrief">
+            <summary id="titre-journal-fin"></summary>
+            <ol id="liste-actions-fin" class="liste-debrief"></ol>
+          </details>
+          <div class="actions-debrief">
+            <button id="rejouer" type="button"></button>
+            <button id="changer-mode" type="button"></button>
+          </div>
+        </div>
+      </section>
     </section>
   </main>
 
@@ -768,6 +1020,10 @@
     const ui = {
       accueil: document.querySelector("#accueil"),
       simulation: document.querySelector("#simulation"),
+      choixModes: document.querySelector("#choix-modes"),
+      titreChoixMode: document.querySelector("#titre-choix-mode"),
+      selectionPanne: document.querySelector("#selection-panne"),
+      titreChoixPanne: document.querySelector("#titre-choix-panne"),
       choixPannes: document.querySelector("#choix-pannes"),
       commencer: document.querySelector("#commencer"),
       statutChargement: document.querySelector("#statut-chargement"),
@@ -779,7 +1035,30 @@
       statutMesure: document.querySelector("#statut-mesure"),
       boutonsMode: [...document.querySelectorAll(".bouton-mode")],
       etatCircuit: document.querySelector("#etat-circuit-valeur"),
+      etatVoyant: document.querySelector(".etat-voyant"),
+      pastilleVoyant: document.querySelector(".pastille-voyant"),
       boutonSon: document.querySelector("#bouton-son"),
+      lancerDemarrage: document.querySelector("#lancer-demarrage"),
+      aideScene: document.querySelector("#aide-scene"),
+      ecranFin: document.querySelector("#ecran-fin"),
+      titreFin: document.querySelector("#titre-fin"),
+      messageFin: document.querySelector("#message-fin"),
+      libelleModeFin: document.querySelector("#libelle-mode-fin"),
+      modeFin: document.querySelector("#mode-fin"),
+      libelleTempsFin: document.querySelector("#libelle-temps-fin"),
+      tempsFin: document.querySelector("#temps-fin"),
+      libelleEnergieFin: document.querySelector("#libelle-energie-fin"),
+      energieFin: document.querySelector("#energie-fin"),
+      titreCriteresFin: document.querySelector("#titre-criteres-fin"),
+      listeCriteresFin: document.querySelector("#liste-criteres-fin"),
+      titreErreursFin: document.querySelector("#titre-erreurs-fin"),
+      listeErreursFin: document.querySelector("#liste-erreurs-fin"),
+      titreAidesFin: document.querySelector("#titre-aides-fin"),
+      listeAidesFin: document.querySelector("#liste-aides-fin"),
+      titreJournalFin: document.querySelector("#titre-journal-fin"),
+      listeActionsFin: document.querySelector("#liste-actions-fin"),
+      rejouer: document.querySelector("#rejouer"),
+      changerMode: document.querySelector("#changer-mode"),
       flashArc: document.querySelector("#flash-arc"),
       trousse: document.querySelector("#trousse"),
       titreTrousse: document.querySelector("#titre-trousse"),
@@ -792,12 +1071,14 @@
       valeurEnergie: document.querySelector("#valeur-energie"),
       niveauEnergie: document.querySelector("#niveau-energie"),
       jaugeEnergie: document.querySelector(".jauge-energie"),
+      multimetre: document.querySelector(".multimetre-ui"),
       scene: document.querySelector("#scene-3d"),
       etiquettes: document.querySelector("#etiquettes-points")
     };
 
     let donnees;
     let panneChoisie;
+    let modeJeu = "entrainement";
     let modeMultimetre = "arret";
     let minuterieMesure = null;
     let pointActif = null;
@@ -810,11 +1091,25 @@
     let energie = 0;
     let fusibleMultimetreFonctionnel = true;
     let panneReparee = false;
+    let mesuresValidation = new Set();
+    let validationReussie = false;
     let simulationTerminee = false;
     let sonActif = true;
     let contexteAudio = null;
     let volumePrincipal = null;
     let boutonsReparation = [];
+    let debutPartie = null;
+    let finPartie = null;
+    let journalActions = [];
+    let journalErreurs = [];
+    let journalAides = [];
+    let mesuresDiagnostic = new Set();
+    let premiereInterventionEffectuee = false;
+    let minuterieAide = null;
+    let niveauAide = 0;
+    let messageAvantAide = null;
+    let texteAideBulle = null;
+    let trappeMiseEnEvidence = false;
 
     let scene;
     let camera;
@@ -825,6 +1120,7 @@
     let lumiereVoyant;
     let levierDisjoncteur;
     let pivotTrappe;
+    let trappe3D;
     let pointsCliquables = [];
     let objetsInteractifs = [];
     let pointeurInitial = null;
@@ -838,17 +1134,51 @@
         const reponse = await fetch(CHEMIN_DONNEES);
         if (!reponse.ok) throw new Error(`Réponse HTTP ${reponse.status}`);
         donnees = await reponse.json();
+        afficherChoixModes();
         afficherChoixPannes();
         initialiserMaintenance();
+        ui.titreChoixMode.textContent = donnees.interface.choisir_mode;
+        ui.titreChoixPanne.textContent = donnees.interface.choisir_panne;
+        actualiserAccueilMode();
         ui.commencer.disabled = false;
         ui.commencer.textContent = "Commencer";
         ui.statutChargement.textContent = "Données prêtes.";
+        preparerRejeuSiDemande();
       } catch (erreur) {
         console.error("Impossible de lire les données de mission.", erreur);
         ui.commencer.textContent = "Données indisponibles";
         ui.statutChargement.textContent = "Impossible de lire data.json. Lance la page depuis un serveur HTTP local.";
         ui.statutChargement.classList.add("erreur");
       }
+    }
+
+    function afficherChoixModes() {
+      ui.choixModes.replaceChildren();
+
+      Object.entries(donnees.modes).forEach(([idMode, mode]) => {
+        const etiquette = document.createElement("label");
+        etiquette.className = "choix-mode";
+
+        const radio = document.createElement("input");
+        radio.type = "radio";
+        radio.name = "mode-jeu";
+        radio.value = idMode;
+        radio.checked = idMode === "entrainement";
+        radio.addEventListener("change", actualiserAccueilMode);
+
+        const nom = document.createElement("strong");
+        nom.textContent = mode.libelle;
+        const description = document.createElement("span");
+        description.textContent = mode.description;
+        etiquette.append(radio, nom, description);
+        ui.choixModes.append(etiquette);
+      });
+    }
+
+    function actualiserAccueilMode() {
+      const choix = document.querySelector('input[name="mode-jeu"]:checked');
+      modeJeu = choix?.value ?? "entrainement";
+      ui.selectionPanne.classList.toggle("masque", modeJeu !== "entrainement");
     }
 
     function afficherChoixPannes() {
@@ -886,6 +1216,16 @@
       ui.titreStock.textContent = donnees.interface.stock_titre;
       ui.titreEnergie.textContent = donnees.interface.energie;
       ui.remplacerFusible.textContent = donnees.interface.remplacer_fusible;
+      ui.lancerDemarrage.textContent = donnees.interface.lancer_demarrage;
+      ui.libelleModeFin.textContent = donnees.debriefing.mode;
+      ui.libelleTempsFin.textContent = donnees.debriefing.temps_total;
+      ui.libelleEnergieFin.textContent = donnees.debriefing.energie_restante;
+      ui.titreCriteresFin.textContent = donnees.debriefing.criteres;
+      ui.titreErreursFin.textContent = donnees.debriefing.erreurs;
+      ui.titreAidesFin.textContent = donnees.debriefing.aides;
+      ui.titreJournalFin.textContent = donnees.debriefing.journal;
+      ui.rejouer.textContent = donnees.debriefing.rejouer;
+      ui.changerMode.textContent = donnees.debriefing.changer_mode;
       ui.boutonSon.disabled = false;
       actualiserBoutonSon();
 
@@ -902,8 +1242,14 @@
       });
 
       ui.remplacerFusible.addEventListener("click", remplacerFusibleMultimetre);
-      ui.fermerTrousse.addEventListener("click", fermerTrousseMaintenance);
+      ui.fermerTrousse.addEventListener("click", () => {
+        enregistrerAction("trousse", "Fermée");
+        fermerTrousseMaintenance();
+      });
       ui.boutonSon.addEventListener("click", basculerSon);
+      ui.lancerDemarrage.addEventListener("click", lancerSequenceDemarrage);
+      ui.rejouer.addEventListener("click", rejouerPartie);
+      ui.changerMode.addEventListener("click", revenirChoixMode);
       actualiserAffichageTrousse();
     }
 
@@ -942,6 +1288,8 @@
 
     function tenterReparation(reparation) {
       if (simulationTerminee) return;
+      enregistrerAction("reparation", reparation.libelle);
+      premiereInterventionEffectuee = true;
 
       if (etatCircuit !== "CONSIGNE") {
         declencherErreurCritique("intervention_sous_tension", true);
@@ -969,6 +1317,12 @@
       const erreur = donnees.erreurs_critiques.find((element) => element.id === idErreur);
       if (!erreur) return;
 
+      journalErreurs.push({
+        tempsMs: debutPartie === null ? 0 : performance.now() - debutPartie,
+        id: erreur.id,
+        message: erreur.message_ines
+      });
+
       energie = Math.max(0, energie + erreur.energie);
       ui.messageInes.textContent = erreur.message_ines;
       if (avecArc) declencherArcElectrique();
@@ -980,9 +1334,13 @@
     function terminerParEpuisement() {
       simulationTerminee = true;
       arreterMesureInstable();
+      arreterAides();
+      fermerTrousseMaintenance();
       ui.messageInes.textContent = donnees.messages_ines.energie_epuisee;
+      ui.lancerDemarrage.disabled = true;
       ui.boutonsMode.forEach((bouton) => { bouton.disabled = true; });
       actualiserAffichageTrousse();
+      afficherDebriefing(false);
     }
 
     function remplacerFusibleMultimetre() {
@@ -992,10 +1350,11 @@
         || stock.fusible_multimetre <= 0
       ) return;
 
+      enregistrerAction("fusible", donnees.interface.remplacer_fusible);
       stock.fusible_multimetre -= 1;
       fusibleMultimetreFonctionnel = true;
       actualiserAffichageTrousse();
-      changerMode(modeMultimetre);
+      changerMode(modeMultimetre, false);
     }
 
     function afficherMultimetreHorsService() {
@@ -1066,6 +1425,7 @@
     }
 
     function basculerSon() {
+      enregistrerAction("son", sonActif ? donnees.interface.couper_son : donnees.interface.activer_son);
       sonActif = !sonActif;
       if (volumePrincipal && contexteAudio) {
         volumePrincipal.gain.setValueAtTime(sonActif ? 1 : 0, contexteAudio.currentTime);
@@ -1080,24 +1440,281 @@
       ui.boutonSon.setAttribute("aria-pressed", String(!sonActif));
     }
 
-    ui.commencer.addEventListener("click", () => {
-      const choix = document.querySelector('input[name="panne"]:checked');
-      panneChoisie = donnees.pannes.find((panne) => String(panne.id) === choix?.value);
+    // Chaque geste utile alimente le journal et relance le délai des aides.
+    function enregistrerAction(type, detail = "") {
+      if (debutPartie === null || simulationTerminee) return;
+      const libelles = {
+        demarrage: "Début de la partie",
+        multimetre: "Réglage du multimètre",
+        mesure: "Mesure",
+        disjoncteur: "Disjoncteur",
+        trappe: "Trappe d'accès",
+        trousse: "Trousse de maintenance",
+        reparation: "Réparation tentée",
+        fusible: "Fusible remplacé",
+        camera: "Vue 3D déplacée",
+        son: "Réglage du son",
+        sequence: "Séquence de démarrage lancée"
+      };
+      journalActions.push({
+        tempsMs: performance.now() - debutPartie,
+        type,
+        libelle: detail ? `${libelles[type] ?? type} · ${detail}` : (libelles[type] ?? type)
+      });
+      relancerCompteurAide();
+    }
+
+    function relancerCompteurAide() {
+      arreterMinuterieAide();
+      retirerAideAffichee();
+      niveauAide = 0;
+      if (modeJeu !== "entrainement" || simulationTerminee || debutPartie === null) return;
+      minuterieAide = window.setTimeout(
+        afficherAideSuivante,
+        donnees.delai_aide_secondes * 1000
+      );
+    }
+
+    function arreterMinuterieAide() {
+      if (minuterieAide !== null) {
+        window.clearTimeout(minuterieAide);
+        minuterieAide = null;
+      }
+    }
+
+    function afficherAideSuivante() {
+      minuterieAide = null;
+      if (modeJeu !== "entrainement" || simulationTerminee) return;
+
+      const aidesEtat = donnees.aides[etatCircuit] ?? [];
+      if (niveauAide >= aidesEtat.length) return;
+      const indexAide = niveauAide;
+      const texte = aidesEtat[indexAide];
+      niveauAide += 1;
+      journalAides.push({
+        tempsMs: performance.now() - debutPartie,
+        etat: etatCircuit,
+        niveau: niveauAide,
+        texte
+      });
+
+      if (niveauAide < 3) {
+        ui.aideScene.textContent = `${donnees.interface.aide} ${niveauAide} · ${texte}`;
+        ui.aideScene.classList.remove("masque");
+      } else {
+        ui.aideScene.classList.add("masque");
+        retirerMiseEnEvidence();
+        messageAvantAide = ui.messageInes.textContent;
+        texteAideBulle = texte;
+        ui.messageInes.textContent = texte;
+      }
+
+      if (niveauAide === 2) mettreElementUtileEnEvidence(etatCircuit);
+      if (niveauAide < aidesEtat.length) {
+        minuterieAide = window.setTimeout(
+          afficherAideSuivante,
+          donnees.delai_aide_secondes * 1000
+        );
+      }
+    }
+
+    function mettreElementUtileEnEvidence(etat) {
+      retirerMiseEnEvidence();
+      if (etat === "SOUS_TENSION") {
+        ui.multimetre.classList.add("element-aide");
+      } else if (etat === "DECHARGE") {
+        const point = pointsCliquables.find((element) => element.userData.id === "TP2");
+        point?.userData.etiquette?.classList.add("element-aide");
+      } else if (etat === "CONSIGNE") {
+        if (ui.trousse.classList.contains("masque")) trappeMiseEnEvidence = true;
+        else ui.trousse.classList.add("element-aide");
+      } else if (etat === "REMISE_SOUS_TENSION") {
+        ui.multimetre.classList.add("element-aide");
+        pointsCliquables.forEach((point) => point.userData.etiquette?.classList.add("element-aide"));
+      }
+    }
+
+    function retirerMiseEnEvidence() {
+      document.querySelectorAll(".element-aide").forEach((element) => {
+        element.classList.remove("element-aide");
+      });
+      trappeMiseEnEvidence = false;
+    }
+
+    function retirerAideAffichee() {
+      ui.aideScene.classList.add("masque");
+      retirerMiseEnEvidence();
+      if (texteAideBulle && ui.messageInes.textContent === texteAideBulle) {
+        ui.messageInes.textContent = messageAvantAide ?? donnees.messages_ines.accueil;
+      }
+      messageAvantAide = null;
+      texteAideBulle = null;
+    }
+
+    function arreterAides() {
+      arreterMinuterieAide();
+      retirerAideAffichee();
+    }
+
+    function ajouterLigne(liste, texte, classe = "") {
+      const ligne = document.createElement("li");
+      ligne.textContent = texte;
+      if (classe) ligne.className = classe;
+      liste.append(ligne);
+    }
+
+    function formaterTemps(dureeMs) {
+      const totalSecondes = Math.max(0, Math.floor(dureeMs / 1000));
+      const minutes = Math.floor(totalSecondes / 60);
+      const secondes = totalSecondes % 60;
+      return `${String(minutes).padStart(2, "0")}:${String(secondes).padStart(2, "0")}`;
+    }
+
+    function afficherDebriefing(reussite) {
+      finPartie = performance.now();
+      arreterAides();
+      const duree = finPartie - debutPartie;
+      const criteres = {
+        securite: !journalErreurs.some((erreur) => erreur.id === "intervention_sous_tension"),
+        diagnostic: mesuresDiagnostic.size === donnees.points_de_test.length,
+        ressources: !journalErreurs.some((erreur) => erreur.id === "piece_gaspillee"),
+        validation: validationReussie
+      };
+
+      ui.ecranFin.classList.toggle("echec", !reussite);
+      ui.titreFin.textContent = reussite
+        ? donnees.debriefing.titre_reussite
+        : donnees.debriefing.titre_echec;
+      ui.messageFin.textContent = reussite
+        ? donnees.messages_ines.fin
+        : donnees.messages_ines.energie_epuisee;
+      ui.modeFin.textContent = donnees.modes[modeJeu].libelle;
+      ui.tempsFin.textContent = formaterTemps(duree);
+      ui.energieFin.textContent = `${Math.max(0, Math.round(energie))} %`;
+
+      ui.listeCriteresFin.replaceChildren();
+      donnees.criteres_reussite.forEach((critere) => {
+        const valide = Boolean(criteres[critere.id]);
+        const ligne = document.createElement("li");
+        const symbole = document.createElement("strong");
+        const libelle = document.createElement("span");
+        ligne.className = valide ? "critere-ok" : "critere-echec";
+        symbole.textContent = valide ? "✓" : "✗";
+        libelle.textContent = critere.libelle;
+        ligne.append(symbole, libelle);
+        ui.listeCriteresFin.append(ligne);
+      });
+
+      ui.listeErreursFin.replaceChildren();
+      if (!journalErreurs.length) {
+        ajouterLigne(ui.listeErreursFin, donnees.debriefing.aucune_erreur);
+      } else {
+        journalErreurs.forEach((erreur) => {
+          ajouterLigne(ui.listeErreursFin, `${formaterTemps(erreur.tempsMs)} · ${erreur.message}`);
+        });
+      }
+
+      ui.listeAidesFin.replaceChildren();
+      if (!journalAides.length) {
+        ajouterLigne(ui.listeAidesFin, donnees.debriefing.aucune_aide);
+      } else {
+        journalAides.forEach((aide) => {
+          ajouterLigne(
+            ui.listeAidesFin,
+            `${formaterTemps(aide.tempsMs)} · ${aide.etat} · ${donnees.interface.aide} ${aide.niveau} : ${aide.texte}`
+          );
+        });
+      }
+
+      ui.listeActionsFin.replaceChildren();
+      journalActions.forEach((action) => {
+        ajouterLigne(ui.listeActionsFin, `${formaterTemps(action.tempsMs)} · ${action.libelle}`);
+      });
+      ui.ecranFin.classList.remove("masque");
+    }
+
+    ui.commencer.addEventListener("click", demarrerPartie, { once: true });
+
+    function demarrerPartie() {
+      if (debutPartie !== null) return;
+
+      actualiserAccueilMode();
+      if (modeJeu === "mission_reelle") {
+        const index = Math.floor(Math.random() * donnees.pannes.length);
+        panneChoisie = donnees.pannes[index];
+      } else {
+        const choix = document.querySelector('input[name="panne"]:checked');
+        panneChoisie = donnees.pannes.find((panne) => String(panne.id) === choix?.value);
+      }
       if (!panneChoisie) return;
 
-      ui.panneActive.textContent = `Scénario ${panneChoisie.id} · ${panneChoisie.nom}`;
+      journalActions = [];
+      journalErreurs = [];
+      journalAides = [];
+      mesuresDiagnostic.clear();
+      premiereInterventionEffectuee = false;
+      debutPartie = performance.now();
+      finPartie = null;
+
+      ui.panneActive.textContent = modeJeu === "mission_reelle"
+        ? `${donnees.modes[modeJeu].libelle} · ${donnees.interface.panne_inconnue}`
+        : `Scénario ${panneChoisie.id} · ${panneChoisie.nom}`;
       ui.messageInes.textContent = donnees.messages_ines.accueil;
       ui.accueil.classList.add("masque");
       ui.simulation.classList.remove("masque");
       creerScene3D();
-    }, { once: true });
+      enregistrerAction("demarrage", donnees.modes[modeJeu].libelle);
+    }
+
+    function preparerRejeuSiDemande() {
+      try {
+        if (sessionStorage.getItem("mission-retour-rejouer") !== "oui") return;
+        sessionStorage.removeItem("mission-retour-rejouer");
+        const modeMemorise = sessionStorage.getItem("mission-retour-mode");
+        const panneMemorisee = sessionStorage.getItem("mission-retour-panne");
+        const radioMode = document.querySelector(`input[name="mode-jeu"][value="${modeMemorise}"]`);
+        if (radioMode) radioMode.checked = true;
+        actualiserAccueilMode();
+        if (modeJeu === "entrainement") {
+          const radioPanne = document.querySelector(`input[name="panne"][value="${panneMemorisee}"]`);
+          if (radioPanne) radioPanne.checked = true;
+        }
+        window.setTimeout(demarrerPartie, 0);
+      } catch (erreur) {
+        console.warn("Le rejeu automatique n'est pas disponible dans ce navigateur.", erreur);
+      }
+    }
+
+    function rejouerPartie() {
+      try {
+        sessionStorage.setItem("mission-retour-rejouer", "oui");
+        sessionStorage.setItem("mission-retour-mode", modeJeu);
+        sessionStorage.setItem("mission-retour-panne", String(panneChoisie.id));
+      } catch (erreur) {
+        console.warn("Le mode de rejeu n'a pas pu être mémorisé.", erreur);
+      }
+      window.location.reload();
+    }
+
+    function revenirChoixMode() {
+      try {
+        sessionStorage.removeItem("mission-retour-rejouer");
+        sessionStorage.removeItem("mission-retour-mode");
+        sessionStorage.removeItem("mission-retour-panne");
+      } catch (erreur) {
+        console.warn("Le choix de mode n'a pas pu être réinitialisé.", erreur);
+      }
+      window.location.reload();
+    }
 
     // Le sélecteur pilote seulement l'affichage : les erreurs électriques viendront plus tard.
     ui.boutonsMode.forEach((bouton) => {
       bouton.addEventListener("click", () => changerMode(bouton.dataset.mode));
     });
 
-    function changerMode(nouveauMode) {
+    function changerMode(nouveauMode, actionUtilisateur = true) {
+      const boutonMode = ui.boutonsMode.find((bouton) => bouton.dataset.mode === nouveauMode);
+      if (actionUtilisateur) enregistrerAction("multimetre", boutonMode?.textContent ?? nouveauMode);
       modeMultimetre = nouveauMode;
       arreterMesureInstable();
 
@@ -1129,8 +1746,12 @@
       if (pointActif) marquerPointActif(null);
     }
 
-    function mesurerPoint(idPoint) {
+    function mesurerPoint(idPoint, actionUtilisateur = true) {
       if (simulationTerminee) return;
+      const boutonMode = ui.boutonsMode.find((bouton) => bouton.dataset.mode === modeMultimetre);
+      if (actionUtilisateur) {
+        enregistrerAction("mesure", `${idPoint} · ${boutonMode?.textContent ?? modeMultimetre}`);
+      }
       arreterMesureInstable();
       marquerPointActif(idPoint);
       ui.pointMesure.textContent = idPoint;
@@ -1160,6 +1781,14 @@
 
       const point = donnees.points_de_test.find((element) => element.id === idPoint);
       const estEnAval = point && !point.amont_disjoncteur;
+      const mesureEstInstable = mesure.instable && !panneReparee;
+      if (
+        actionUtilisateur
+        && etatCircuit === "SOUS_TENSION"
+        && !premiereInterventionEffectuee
+      ) {
+        mesuresDiagnostic.add(idPoint);
+      }
 
       const actualiser = () => {
         const valeur = calculerTension(idPoint);
@@ -1177,9 +1806,12 @@
         if (
           etatCircuit === "REMISE_SOUS_TENSION"
           && valeurAffichee > donnees.seuil_absence_tension
+          && !validationReussie
         ) {
           afficherAvertissementSousTension();
         }
+
+        enregistrerMesureValidation(idPoint, valeurAffichee);
 
         if (estEnAval && valeurAffichee === 0 && minuterieMesure !== null) {
           arreterMesureInstable();
@@ -1188,7 +1820,7 @@
 
       actualiser();
       ui.unite.textContent = "V";
-      ui.statutMesure.textContent = mesure.instable
+      ui.statutMesure.textContent = mesureEstInstable
         ? `${idPoint} · valeur instable`
         : `${idPoint} · mesure stable`;
 
@@ -1196,7 +1828,7 @@
         && (etatCircuit === "DECHARGE" || etatCircuit === "CONSIGNE")
         && calculerFacteurDecharge() > 0;
 
-      if (circuitEnDecharge || mesure.instable) {
+      if (circuitEnDecharge || mesureEstInstable) {
         const intervalle = circuitEnDecharge ? 100 : donnees.intervalle_instable_ms;
         minuterieMesure = window.setInterval(actualiser, intervalle);
       }
@@ -1214,8 +1846,11 @@
       return tensionInitiale * calculerFacteurDecharge();
     }
 
-    // Sous tension, les valeurs restent strictement celles de la tâche 1.
+    // Une réparation correcte rétablit ensuite les valeurs nominales du circuit.
     function calculerTensionSousTension(idPoint) {
+      const point = donnees.points_de_test.find((element) => element.id === idPoint);
+      if (panneReparee && point) return point.nominal;
+
       const mesure = panneChoisie.mesures[idPoint];
       if (!mesure) return 0;
       return mesure.instable
@@ -1238,6 +1873,55 @@
       ui.messageInes.textContent = donnees.messages_ines.circuit_sous_tension;
     }
 
+    function enregistrerMesureValidation(idPoint, valeur) {
+      if (etatCircuit !== "REMISE_SOUS_TENSION") return;
+
+      const point = donnees.points_de_test.find((element) => element.id === idPoint);
+      if (!point) return;
+
+      const dansTolerance = Math.abs(valeur - point.nominal) <= point.tolerance;
+      if (dansTolerance) mesuresValidation.add(idPoint);
+      else mesuresValidation.delete(idPoint);
+
+      if (panneReparee && mesuresValidation.size === donnees.points_de_test.length) {
+        validerCircuit();
+      }
+    }
+
+    function validerCircuit() {
+      validationReussie = true;
+      ui.pastilleVoyant.classList.add("valide");
+      ui.etatVoyant.setAttribute("aria-label", "Voyant propulsion vert fixe");
+      ui.messageInes.textContent = donnees.messages_ines.validation_ok;
+    }
+
+    function reinitialiserValidation() {
+      mesuresValidation.clear();
+      validationReussie = false;
+      ui.pastilleVoyant.classList.remove("valide");
+      ui.etatVoyant.setAttribute("aria-label", "Voyant propulsion orange clignotant");
+    }
+
+    function lancerSequenceDemarrage() {
+      if (simulationTerminee) return;
+      enregistrerAction("sequence");
+
+      if (!validationReussie) {
+        ui.messageInes.textContent = donnees.messages_ines.demarrage_refuse;
+        return;
+      }
+
+      changerEtatCircuit("TERMINE");
+      simulationTerminee = true;
+      arreterMesureInstable();
+      fermerTrousseMaintenance();
+      ui.messageInes.textContent = donnees.messages_ines.fin;
+      ui.lancerDemarrage.disabled = true;
+      ui.boutonsMode.forEach((bouton) => { bouton.disabled = true; });
+      actualiserAffichageTrousse();
+      afficherDebriefing(true);
+    }
+
     function arreterMesureInstable() {
       if (minuterieMesure !== null) {
         window.clearInterval(minuterieMesure);
@@ -1256,15 +1940,21 @@
     }
 
     function changerEtatCircuit(nouvelEtat) {
+      const etatPrecedent = etatCircuit;
       etatCircuit = nouvelEtat;
       ui.etatCircuit.textContent = nouvelEtat;
+      if (etatPrecedent !== nouvelEtat && debutPartie !== null && !simulationTerminee) {
+        relancerCompteurAide();
+      }
     }
 
     function basculerDisjoncteur() {
       if (simulationTerminee) return;
+      enregistrerAction("disjoncteur", disjoncteurOuvert ? "Refermé" : "Ouvert");
       disjoncteurOuvert = !disjoncteurOuvert;
 
       if (disjoncteurOuvert) {
+        reinitialiserValidation();
         // On mémorise les tensions de départ pour obtenir une descente continue,
         // y compris lorsque la panne produit normalement une valeur instable.
         tensionsDebutDecharge = Object.fromEntries(
@@ -1276,6 +1966,7 @@
         const nouvelEtat = etatCircuit === "CONSIGNE"
           ? "REMISE_SOUS_TENSION"
           : "SOUS_TENSION";
+        if (nouvelEtat === "REMISE_SOUS_TENSION") reinitialiserValidation();
         debutDecharge = null;
         changerEtatCircuit(nouvelEtat);
         afficherAvertissementSousTension();
@@ -1286,6 +1977,7 @@
 
     function basculerTrappe() {
       if (simulationTerminee) return;
+      enregistrerAction("trappe", trappeOuverte ? "Fermée" : "Ouverte");
       trappeOuverte = !trappeOuverte;
       const ouvertureDemandee = trappeOuverte;
 
@@ -1298,8 +1990,9 @@
       }, 0);
     }
 
-    function ouvrirTrousseMaintenance() {
+    function ouvrirTrousseMaintenance(actionUtilisateur = false) {
       if (!trappeOuverte || simulationTerminee) return;
+      if (actionUtilisateur) enregistrerAction("trousse", "Ouverte");
       window.setTimeout(() => {
         if (!trappeOuverte || simulationTerminee) return;
         ui.trousse.classList.remove("masque");
@@ -1313,7 +2006,7 @@
     }
 
     function actualiserMesureActive() {
-      if (pointActif && modeMultimetre === "volts") mesurerPoint(pointActif);
+      if (pointActif && modeMultimetre === "volts") mesurerPoint(pointActif, false);
     }
 
     function creerScene3D() {
@@ -1345,6 +2038,7 @@
       controles.maxPolarAngle = Math.PI * 0.58;
       controles.minAzimuthAngle = -Math.PI * 0.42;
       controles.maxAzimuthAngle = Math.PI * 0.42;
+      controles.addEventListener("end", () => enregistrerAction("camera"));
 
       rayon = new THREE.Raycaster();
       ajouterLumieres();
@@ -1503,6 +2197,7 @@
         new THREE.BoxGeometry(2.4, 1.45, 0.22),
         new THREE.MeshStandardMaterial({ color: 0x344a58, roughness: 0.78, metalness: 0.26 })
       );
+      trappe3D = trappe;
       trappe.position.set(1.2, 0, 0);
       trappe.userData.action = "trappe";
       pivotTrappe.add(trappe);
@@ -1619,7 +2314,7 @@
         if (objet.userData.action === "mesurer") mesurerPoint(objet.userData.id);
         if (objet.userData.action === "disjoncteur") basculerDisjoncteur();
         if (objet.userData.action === "trappe") basculerTrappe();
-        if (objet.userData.action === "maintenance") ouvrirTrousseMaintenance();
+        if (objet.userData.action === "maintenance") ouvrirTrousseMaintenance(true);
       });
 
       canevas.addEventListener("pointercancel", () => { pointeurInitial = null; });
@@ -1679,10 +2374,21 @@
       requestAnimationFrame(animer);
       controles.update();
 
-      // Le voyant reste orange et clignote tant que la réparation n'existe pas.
-      const pulsation = 0.32 + (Math.sin(temps * 0.006) + 1) * 0.34;
-      voyant3D.material.emissiveIntensity = 0.7 + pulsation * 2.2;
-      lumiereVoyant.intensity = 0.35 + pulsation * 2.1;
+      if (validationReussie) {
+        voyant3D.material.color.setHex(0x48e08b);
+        voyant3D.material.emissive.setHex(0x16a858);
+        voyant3D.material.emissiveIntensity = 2.1;
+        lumiereVoyant.color.setHex(0x48e08b);
+        lumiereVoyant.intensity = 1.8;
+      } else {
+        // Avant validation, le voyant PROPULSION reste orange et clignote.
+        const pulsation = 0.32 + (Math.sin(temps * 0.006) + 1) * 0.34;
+        voyant3D.material.color.setHex(0xff9d2e);
+        voyant3D.material.emissive.setHex(0xff6a00);
+        voyant3D.material.emissiveIntensity = 0.7 + pulsation * 2.2;
+        lumiereVoyant.color.setHex(0xff7a18);
+        lumiereVoyant.intensity = 0.35 + pulsation * 2.1;
+      }
 
       const angleLevier = disjoncteurOuvert ? -0.72 : 0;
       const hauteurLevier = disjoncteurOuvert ? -0.12 : 0;
@@ -1699,6 +2405,11 @@
 
       const angleTrappe = trappeOuverte ? 1.35 : 0;
       pivotTrappe.rotation.y = THREE.MathUtils.lerp(pivotTrappe.rotation.y, angleTrappe, 0.12);
+      if (trappe3D) {
+        const pulsationAide = (Math.sin(temps * 0.008) + 1) * 0.5;
+        trappe3D.material.emissive.setHex(trappeMiseEnEvidence ? 0x0d8aab : 0x000000);
+        trappe3D.material.emissiveIntensity = trappeMiseEnEvidence ? 0.8 + pulsationAide * 1.8 : 1;
+      }
 
       positionnerEtiquettes();
       rendu.render(scene, camera);
