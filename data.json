@@ -55,6 +55,21 @@
     "cable": 1,
     "fusible_multimetre": 2
   },
+  "libelles_stock": {
+    "convertisseur": "Convertisseur",
+    "cable": "Câble de liaison",
+    "fusible_multimetre": "Fusibles du multimètre"
+  },
+  "interface": {
+    "trousse_titre": "Trousse de maintenance",
+    "fermer_trousse": "Fermer la trousse",
+    "stock_titre": "Stock disponible",
+    "energie": "Énergie",
+    "remplacer_fusible": "Remplacer le fusible du multimètre",
+    "hors_service": "HORS SERVICE",
+    "couper_son": "Couper le son",
+    "activer_son": "Activer le son"
+  },
   "erreurs_critiques": [
     {
       "id": "intervention_sous_tension",
