@@ -902,7 +902,7 @@
       });
 
       ui.remplacerFusible.addEventListener("click", remplacerFusibleMultimetre);
-      ui.fermerTrousse.addEventListener("click", basculerTrappe);
+      ui.fermerTrousse.addEventListener("click", fermerTrousseMaintenance);
       ui.boutonSon.addEventListener("click", basculerSon);
       actualiserAffichageTrousse();
     }
@@ -1293,9 +1293,23 @@
       // n'active immédiatement un bouton apparu sous le doigt.
       window.setTimeout(() => {
         if (trappeOuverte !== ouvertureDemandee) return;
-        ui.trousse.classList.toggle("masque", !ouvertureDemandee);
-        if (ouvertureDemandee) actualiserAffichageTrousse();
+        if (ouvertureDemandee) ouvrirTrousseMaintenance();
+        else fermerTrousseMaintenance();
       }, 0);
+    }
+
+    function ouvrirTrousseMaintenance() {
+      if (!trappeOuverte || simulationTerminee) return;
+      window.setTimeout(() => {
+        if (!trappeOuverte || simulationTerminee) return;
+        ui.trousse.classList.remove("masque");
+        ui.trousse.scrollTop = 0;
+        actualiserAffichageTrousse();
+      }, 0);
+    }
+
+    function fermerTrousseMaintenance() {
+      ui.trousse.classList.add("masque");
     }
 
     function actualiserMesureActive() {
@@ -1456,9 +1470,32 @@
         new THREE.MeshStandardMaterial({ color: 0x09131b, roughness: 0.9, metalness: 0.1 })
       );
       interieurTrappe.position.set(1.72, -0.62, 0.58);
-      interieurTrappe.userData.action = "trappe";
+      interieurTrappe.userData.action = "maintenance";
       groupe.add(interieurTrappe);
       objetsInteractifs.push(interieurTrappe);
+
+      const accesTrousse = new THREE.Mesh(
+        new THREE.BoxGeometry(1.68, 0.72, 0.13),
+        new THREE.MeshStandardMaterial({
+          color: 0x17475c,
+          emissive: 0x0d8aab,
+          emissiveIntensity: 0.7,
+          roughness: 0.5,
+          metalness: 0.25
+        })
+      );
+      accesTrousse.position.set(1.72, -0.62, 0.69);
+      accesTrousse.userData.action = "maintenance";
+      groupe.add(accesTrousse);
+      objetsInteractifs.push(accesTrousse);
+
+      const etiquetteTrousse = creerEtiquette3D(
+        donnees.interface.trousse_titre.toUpperCase(),
+        1.55,
+        0.28
+      );
+      etiquetteTrousse.position.set(1.72, -0.62, 0.78);
+      groupe.add(etiquetteTrousse);
 
       pivotTrappe = new THREE.Group();
       pivotTrappe.position.set(0.52, -0.62, 0.7);
@@ -1582,6 +1619,7 @@
         if (objet.userData.action === "mesurer") mesurerPoint(objet.userData.id);
         if (objet.userData.action === "disjoncteur") basculerDisjoncteur();
         if (objet.userData.action === "trappe") basculerTrappe();
+        if (objet.userData.action === "maintenance") ouvrirTrousseMaintenance();
       });
 
       canevas.addEventListener("pointercancel", () => { pointeurInitial = null; });
@@ -1659,7 +1697,7 @@
         0.14
       );
 
-      const angleTrappe = trappeOuverte ? -1.35 : 0;
+      const angleTrappe = trappeOuverte ? 1.35 : 0;
       pivotTrappe.rotation.y = THREE.MathUtils.lerp(pivotTrappe.rotation.y, angleTrappe, 0.12);
 
       positionnerEtiquettes();
