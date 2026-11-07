@@ -270,6 +270,12 @@
       animation: clignoter 1s ease-in-out infinite;
     }
 
+    .pastille-voyant.valide {
+      background: #48e08b;
+      box-shadow: 0 0 16px #48e08b;
+      animation: none;
+    }
+
     @keyframes clignoter { 50% { opacity: 0.22; box-shadow: 0 0 3px var(--orange); } }
 
     .consigne-scene {
@@ -473,13 +479,64 @@
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
     }
 
+    #lancer-demarrage {
+      position: absolute;
+      z-index: 6;
+      top: 154px;
+      left: 50%;
+      min-height: 50px;
+      padding: 10px 18px;
+      transform: translateX(-50%);
+      border: 2px solid var(--orange);
+      border-radius: 12px;
+      background: rgba(75, 44, 16, 0.94);
+      color: white;
+      font-weight: 900;
+      white-space: nowrap;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
+    }
+
+    #lancer-demarrage:hover { background: #69401c; }
+    #lancer-demarrage:disabled { opacity: 0.5; cursor: not-allowed; }
+
     #bouton-son:focus-visible,
+    #lancer-demarrage:focus-visible,
     .bouton-reparation:focus-visible,
     #remplacer-fusible:focus-visible,
     #fermer-trousse:focus-visible {
       outline: 3px solid var(--cyan);
       outline-offset: 2px;
     }
+
+    .ecran-fin {
+      position: absolute;
+      z-index: 10;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: rgba(3, 10, 17, 0.88);
+      backdrop-filter: blur(10px);
+    }
+
+    .carte-fin {
+      width: min(560px, 100%);
+      padding: clamp(28px, 6vw, 52px);
+      border: 2px solid #48e08b;
+      border-radius: 24px;
+      background: #0c2230;
+      text-align: center;
+      box-shadow: var(--ombre);
+    }
+
+    .carte-fin h2 {
+      margin: 0 0 16px;
+      color: #72efa7;
+      font-size: clamp(2rem, 8vw, 3.8rem);
+    }
+
+    .carte-fin p { margin: 0; font-size: 1.15rem; line-height: 1.55; }
 
     .trousse-ui {
       position: absolute;
@@ -637,6 +694,11 @@
       .bulle-ines { grid-template-columns: 44px 1fr; }
       .portrait-ines { width: 44px; height: 44px; }
       #bouton-son { top: 116px; }
+      #lancer-demarrage {
+        top: 168px;
+        max-width: calc(100% - 32px);
+        white-space: normal;
+      }
       .trousse-ui {
         top: 168px;
         left: max(16px, env(safe-area-inset-left));
@@ -710,6 +772,7 @@
       </header>
 
       <p class="consigne-scene">Fais pivoter la vue. Utilise le disjoncteur, la trappe et les points de test.</p>
+      <button id="lancer-demarrage" type="button"></button>
 
       <aside id="trousse" class="trousse-ui masque" aria-labelledby="titre-trousse">
         <div class="trousse-entete">
@@ -755,6 +818,13 @@
           <p id="message-ines"></p>
         </div>
       </aside>
+
+      <section id="ecran-fin" class="ecran-fin masque" aria-labelledby="titre-fin">
+        <div class="carte-fin">
+          <h2 id="titre-fin"></h2>
+          <p id="message-fin"></p>
+        </div>
+      </section>
     </section>
   </main>
 
@@ -779,7 +849,13 @@
       statutMesure: document.querySelector("#statut-mesure"),
       boutonsMode: [...document.querySelectorAll(".bouton-mode")],
       etatCircuit: document.querySelector("#etat-circuit-valeur"),
+      etatVoyant: document.querySelector(".etat-voyant"),
+      pastilleVoyant: document.querySelector(".pastille-voyant"),
       boutonSon: document.querySelector("#bouton-son"),
+      lancerDemarrage: document.querySelector("#lancer-demarrage"),
+      ecranFin: document.querySelector("#ecran-fin"),
+      titreFin: document.querySelector("#titre-fin"),
+      messageFin: document.querySelector("#message-fin"),
       flashArc: document.querySelector("#flash-arc"),
       trousse: document.querySelector("#trousse"),
       titreTrousse: document.querySelector("#titre-trousse"),
@@ -810,6 +886,8 @@
     let energie = 0;
     let fusibleMultimetreFonctionnel = true;
     let panneReparee = false;
+    let mesuresValidation = new Set();
+    let validationReussie = false;
     let simulationTerminee = false;
     let sonActif = true;
     let contexteAudio = null;
@@ -886,6 +964,8 @@
       ui.titreStock.textContent = donnees.interface.stock_titre;
       ui.titreEnergie.textContent = donnees.interface.energie;
       ui.remplacerFusible.textContent = donnees.interface.remplacer_fusible;
+      ui.lancerDemarrage.textContent = donnees.interface.lancer_demarrage;
+      ui.titreFin.textContent = donnees.interface.ecran_fin_titre;
       ui.boutonSon.disabled = false;
       actualiserBoutonSon();
 
@@ -904,6 +984,7 @@
       ui.remplacerFusible.addEventListener("click", remplacerFusibleMultimetre);
       ui.fermerTrousse.addEventListener("click", fermerTrousseMaintenance);
       ui.boutonSon.addEventListener("click", basculerSon);
+      ui.lancerDemarrage.addEventListener("click", lancerSequenceDemarrage);
       actualiserAffichageTrousse();
     }
 
@@ -981,6 +1062,7 @@
       simulationTerminee = true;
       arreterMesureInstable();
       ui.messageInes.textContent = donnees.messages_ines.energie_epuisee;
+      ui.lancerDemarrage.disabled = true;
       ui.boutonsMode.forEach((bouton) => { bouton.disabled = true; });
       actualiserAffichageTrousse();
     }
@@ -1160,6 +1242,7 @@
 
       const point = donnees.points_de_test.find((element) => element.id === idPoint);
       const estEnAval = point && !point.amont_disjoncteur;
+      const mesureEstInstable = mesure.instable && !panneReparee;
 
       const actualiser = () => {
         const valeur = calculerTension(idPoint);
@@ -1177,9 +1260,12 @@
         if (
           etatCircuit === "REMISE_SOUS_TENSION"
           && valeurAffichee > donnees.seuil_absence_tension
+          && !validationReussie
         ) {
           afficherAvertissementSousTension();
         }
+
+        enregistrerMesureValidation(idPoint, valeurAffichee);
 
         if (estEnAval && valeurAffichee === 0 && minuterieMesure !== null) {
           arreterMesureInstable();
@@ -1188,7 +1274,7 @@
 
       actualiser();
       ui.unite.textContent = "V";
-      ui.statutMesure.textContent = mesure.instable
+      ui.statutMesure.textContent = mesureEstInstable
         ? `${idPoint} · valeur instable`
         : `${idPoint} · mesure stable`;
 
@@ -1196,7 +1282,7 @@
         && (etatCircuit === "DECHARGE" || etatCircuit === "CONSIGNE")
         && calculerFacteurDecharge() > 0;
 
-      if (circuitEnDecharge || mesure.instable) {
+      if (circuitEnDecharge || mesureEstInstable) {
         const intervalle = circuitEnDecharge ? 100 : donnees.intervalle_instable_ms;
         minuterieMesure = window.setInterval(actualiser, intervalle);
       }
@@ -1214,8 +1300,11 @@
       return tensionInitiale * calculerFacteurDecharge();
     }
 
-    // Sous tension, les valeurs restent strictement celles de la tâche 1.
+    // Une réparation correcte rétablit ensuite les valeurs nominales du circuit.
     function calculerTensionSousTension(idPoint) {
+      const point = donnees.points_de_test.find((element) => element.id === idPoint);
+      if (panneReparee && point) return point.nominal;
+
       const mesure = panneChoisie.mesures[idPoint];
       if (!mesure) return 0;
       return mesure.instable
@@ -1236,6 +1325,55 @@
 
     function afficherAvertissementSousTension() {
       ui.messageInes.textContent = donnees.messages_ines.circuit_sous_tension;
+    }
+
+    function enregistrerMesureValidation(idPoint, valeur) {
+      if (etatCircuit !== "REMISE_SOUS_TENSION") return;
+
+      const point = donnees.points_de_test.find((element) => element.id === idPoint);
+      if (!point) return;
+
+      const dansTolerance = Math.abs(valeur - point.nominal) <= point.tolerance;
+      if (dansTolerance) mesuresValidation.add(idPoint);
+      else mesuresValidation.delete(idPoint);
+
+      if (panneReparee && mesuresValidation.size === donnees.points_de_test.length) {
+        validerCircuit();
+      }
+    }
+
+    function validerCircuit() {
+      validationReussie = true;
+      ui.pastilleVoyant.classList.add("valide");
+      ui.etatVoyant.setAttribute("aria-label", "Voyant propulsion vert fixe");
+      ui.messageInes.textContent = donnees.messages_ines.validation_ok;
+    }
+
+    function reinitialiserValidation() {
+      mesuresValidation.clear();
+      validationReussie = false;
+      ui.pastilleVoyant.classList.remove("valide");
+      ui.etatVoyant.setAttribute("aria-label", "Voyant propulsion orange clignotant");
+    }
+
+    function lancerSequenceDemarrage() {
+      if (simulationTerminee) return;
+
+      if (!validationReussie) {
+        ui.messageInes.textContent = donnees.messages_ines.demarrage_refuse;
+        return;
+      }
+
+      changerEtatCircuit("TERMINE");
+      simulationTerminee = true;
+      arreterMesureInstable();
+      fermerTrousseMaintenance();
+      ui.messageInes.textContent = donnees.messages_ines.fin;
+      ui.messageFin.textContent = donnees.messages_ines.fin;
+      ui.ecranFin.classList.remove("masque");
+      ui.lancerDemarrage.disabled = true;
+      ui.boutonsMode.forEach((bouton) => { bouton.disabled = true; });
+      actualiserAffichageTrousse();
     }
 
     function arreterMesureInstable() {
@@ -1265,6 +1403,7 @@
       disjoncteurOuvert = !disjoncteurOuvert;
 
       if (disjoncteurOuvert) {
+        reinitialiserValidation();
         // On mémorise les tensions de départ pour obtenir une descente continue,
         // y compris lorsque la panne produit normalement une valeur instable.
         tensionsDebutDecharge = Object.fromEntries(
@@ -1276,6 +1415,7 @@
         const nouvelEtat = etatCircuit === "CONSIGNE"
           ? "REMISE_SOUS_TENSION"
           : "SOUS_TENSION";
+        if (nouvelEtat === "REMISE_SOUS_TENSION") reinitialiserValidation();
         debutDecharge = null;
         changerEtatCircuit(nouvelEtat);
         afficherAvertissementSousTension();
@@ -1679,10 +1819,21 @@
       requestAnimationFrame(animer);
       controles.update();
 
-      // Le voyant reste orange et clignote tant que la réparation n'existe pas.
-      const pulsation = 0.32 + (Math.sin(temps * 0.006) + 1) * 0.34;
-      voyant3D.material.emissiveIntensity = 0.7 + pulsation * 2.2;
-      lumiereVoyant.intensity = 0.35 + pulsation * 2.1;
+      if (validationReussie) {
+        voyant3D.material.color.setHex(0x48e08b);
+        voyant3D.material.emissive.setHex(0x16a858);
+        voyant3D.material.emissiveIntensity = 2.1;
+        lumiereVoyant.color.setHex(0x48e08b);
+        lumiereVoyant.intensity = 1.8;
+      } else {
+        // Avant validation, le voyant PROPULSION reste orange et clignote.
+        const pulsation = 0.32 + (Math.sin(temps * 0.006) + 1) * 0.34;
+        voyant3D.material.color.setHex(0xff9d2e);
+        voyant3D.material.emissive.setHex(0xff6a00);
+        voyant3D.material.emissiveIntensity = 0.7 + pulsation * 2.2;
+        lumiereVoyant.color.setHex(0xff7a18);
+        lumiereVoyant.intensity = 0.35 + pulsation * 2.1;
+      }
 
       const angleLevier = disjoncteurOuvert ? -0.72 : 0;
       const hauteurLevier = disjoncteurOuvert ? -0.12 : 0;

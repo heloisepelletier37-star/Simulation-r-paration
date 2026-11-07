@@ -67,6 +67,8 @@
     "energie": "Énergie",
     "remplacer_fusible": "Remplacer le fusible du multimètre",
     "hors_service": "HORS SERVICE",
+    "lancer_demarrage": "Lancer la séquence de démarrage",
+    "ecran_fin_titre": "Mission terminée",
     "couper_son": "Couper le son",
     "activer_son": "Activer le son"
   },
