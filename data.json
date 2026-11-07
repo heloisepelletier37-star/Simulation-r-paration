@@ -81,6 +81,7 @@
   "messages_ines": {
     "accueil": "Hugo, ici Inès. Le voyant PROPULSION clignote. Trouve la cause avant de toucher à quoi que ce soit.",
     "consigne_ok": "Tension nulle confirmée. Tu peux intervenir en sécurité.",
+    "circuit_sous_tension": "Mets le circuit hors tension pour intervenir en sécurité.",
     "reparation_ok": "Réparation faite. Referme le disjoncteur et vérifie tes trois mesures.",
     "validation_ok": "Les trois valeurs sont dans les tolérances. Le voyant est vert !",
     "demarrage_refuse": "Séquence refusée : la validation n'est pas faite. Mesure les trois points après la remise sous tension.",

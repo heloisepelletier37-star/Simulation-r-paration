@@ -722,6 +722,13 @@
           passerEnConsigne();
         }
 
+        if (
+          etatCircuit === "REMISE_SOUS_TENSION"
+          && valeurAffichee > donnees.seuil_absence_tension
+        ) {
+          afficherAvertissementSousTension();
+        }
+
         if (estEnAval && valeurAffichee === 0 && minuterieMesure !== null) {
           arreterMesureInstable();
         }
@@ -775,6 +782,10 @@
       ui.messageInes.textContent = donnees.messages_ines.consigne_ok;
     }
 
+    function afficherAvertissementSousTension() {
+      ui.messageInes.textContent = donnees.messages_ines.circuit_sous_tension;
+    }
+
     function arreterMesureInstable() {
       if (minuterieMesure !== null) {
         window.clearInterval(minuterieMesure);
@@ -814,6 +825,7 @@
           : "SOUS_TENSION";
         debutDecharge = null;
         changerEtatCircuit(nouvelEtat);
+        afficherAvertissementSousTension();
       }
 
       actualiserMesureActive();
